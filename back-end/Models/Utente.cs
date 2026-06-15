@@ -2,7 +2,7 @@ namespace InfoGiovani_Back.Models;
 
 public class Utente
 {
-    public int Id { get; set; }
+    public int IdUtente { get; set; }
     public string? NomeUtente { get; set; }
     public string? Nome { get; set; }
     public string? Cognome { get; set; }
