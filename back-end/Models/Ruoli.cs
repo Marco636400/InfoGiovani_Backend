@@ -2,7 +2,7 @@ namespace InfoGiovani_Back.Models;
 
 public class Ruoli
 {
-    public int IdRuolo { get; set; }
+    public int IdRuolo { get; }
     public string? NomeRuolo { get; set; }
     public bool CanCreateUser { get; set; } = false;
     public bool CanCreateEntity { get; set; } = false;
