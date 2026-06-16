@@ -2,11 +2,10 @@ namespace InfoGiovani_Back.Models;
 
 public class Ente
 {
-    public  int IdEnte { get;}
+    public int IdEnte { get;private set; }
     public required string Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
-    public string? Città { get; set; }
-    public string? Provincia { get; set; }
+    public int? IdCitta { get; private set; }
     public string? Telefono1 { get; set; }
     public string? Telefono2 { get; set; }
     public string? Fax { get; set; }
@@ -15,8 +14,13 @@ public class Ente
     public string? Url { get; set; }
     public string? Contatto { get; set; }
     public required int IdUtenteCreazione { get; set; }
-    public required DateTime DataCreazione { get; set; }
-    public int IdUtenteModifica { get; set; }
-    public DateTime DataModifica { get; set; }
+    public DateTime DataCreazione { get;private set; } = DateTime.Now;
+    public int? IdUtenteModifica { get; set; }
+    public DateTime? DataUltimaModifica { get; set; }
 
+    // Navigation
+    public Citta? Citta { get; set; }
+    public Utente UtenteCreazione { get; set; } = null!;
+    public Utente? UtenteModifica { get; set; }
+    public ICollection<Scheda> Schede { get; set; } = [];
 }
