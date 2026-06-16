@@ -43,6 +43,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHttpClient();
 
 builder.Services.AddCors(options =>
 {
@@ -80,5 +81,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("LanPolicy");       
+app.UseAuthentication();       
+app.UseAuthorization();
+app.MapControllers();           
 app.Run();

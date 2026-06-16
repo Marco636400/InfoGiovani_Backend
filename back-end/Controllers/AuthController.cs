@@ -34,7 +34,7 @@ namespace InfoGiovani_Back.Controllers
 
             var utente = new Utente
             { //da modificare, probabilmente servirà un dto per la registrazione con più campi
-            
+              //
                 Username = request.Username,
                 Nome = request.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
@@ -52,25 +52,25 @@ namespace InfoGiovani_Back.Controllers
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var utente = await db.Utenti
+                .Include(u => u.Ruolo)                                          // ← cambiato
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
             if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password))
                 return Unauthorized(new { error = "Credenziali non valide" });
 
-            var accessToken = tokenService.GenerateAccessToken(utente.Username);
+            var accessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);  // ← cambiato
             var refreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = refreshToken;
             utente.ScadenzaRefreshToken = DateTime.UtcNow.AddDays(
                 int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
             );
+            utente.UltimoLogin = DateTime.UtcNow;                               // ← aggiunto
             await db.SaveChangesAsync();
 
-            // Refresh token nel cookie HttpOnly
-            Response.Cookies.Append("refreshtoken", refreshToken, new CookieOptions
+            Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                //Test in locale, in produzione va messo a true e SameSite a None
                 Secure = false,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddDays(
@@ -78,12 +78,8 @@ namespace InfoGiovani_Back.Controllers
                 )
             });
 
-            return Ok(new
-            {
-                accessToken = accessToken
-            });
+            return Ok(new { accessToken });
         }
-
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
@@ -94,12 +90,13 @@ namespace InfoGiovani_Back.Controllers
                 return Unauthorized(new { error = "Refresh token mancante" });
 
             var utente = await db.Utenti
+                .Include(u => u.Ruolo)
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
             if (utente == null || utente.ScadenzaRefreshToken < DateTime.UtcNow)
                 return Unauthorized(new { error = "Refresh token non valido o scaduto" });
 
-            var newAccessToken = tokenService.GenerateAccessToken(utente.Username);
+            var newAccessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);
             var newRefreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = newRefreshToken;
@@ -109,7 +106,7 @@ namespace InfoGiovani_Back.Controllers
             await db.SaveChangesAsync();
 
             // Rispedisce il nuovo refresh token come cookie HttpOnly
-            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
+            Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 //Test in locale, in produzione va messo a true e SameSite a None
