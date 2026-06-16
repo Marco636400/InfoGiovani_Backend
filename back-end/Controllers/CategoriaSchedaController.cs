@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
 {
@@ -20,25 +21,39 @@ namespace back_end.Controllers
             _context = context;
         }
 
-        // GET: api/CategoriaScheda
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<CategoriaScheda>>> GetCategorieSchede()
+        // GET: api/CategoriaScheda/5
+        [HttpGet("{CategoriaId}")]
+        public async Task<ActionResult<IEnumerable<Scheda>>> GetCategorieSchede(int CategoriaId)
         {
-            return await _context.CategorieSchede.ToListAsync();
+             var famigliari = await _context.CategorieSchede
+                .Where(f => f.IdCategoria == CategoriaId)
+                .Join(
+                    _context.Schede,
+                    f => f.IdScheda, 
+                    c => c.IdScheda,
+                    (f, c) => c
+                )
+                .ToListAsync();
+
+            return Ok(famigliari);
         }
 
-        // GET: api/CategoriaScheda/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CategoriaScheda>> GetCategoriaScheda(int id)
+        // GET: api/CategoriaScheda/5/3
+        [HttpGet("{CategoriaId}/{SchedaId}")]
+        public async Task<ActionResult<CategoriaScheda>> GetCategoriaScheda(int CategoriaId,int SchedaId)
         {
-            var categoriaScheda = await _context.CategorieSchede.FindAsync(id);
+            var esiste = await _context.CategorieSchede
+                .AnyAsync(f => f.IdCategoria == CategoriaId && f.IdScheda == SchedaId);
 
-            if (categoriaScheda == null)
-            {
+            if (!esiste)
                 return NotFound();
-            }
 
-            return categoriaScheda;
+            var scheda = await _context.Schede.FindAsync(SchedaId);
+
+            if (scheda == null)
+                return NotFound();
+            
+            return Ok(scheda);
         }
 
         // PUT: api/CategoriaScheda/5

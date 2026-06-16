@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
 {
