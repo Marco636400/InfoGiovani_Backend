@@ -22,14 +22,15 @@ public class AppDbContext : DbContext
         // ── ALLEGATO ────────────────────────────────────────────
         modelBuilder.Entity<Allegato>(e =>
         {
+            e.ToTable("allegato");
             e.HasKey(a => a.IdAllegato);
             e.Property(a => a.IdAllegato).ValueGeneratedOnAdd();
             e.Property(a => a.Nome).HasMaxLength(255).IsRequired();
             e.Property(a => a.Estensione).HasMaxLength(5);
             e.Property(a => a.Url).HasMaxLength(500);
 
-            e.HasCheckConstraint("CHK_allegato_documento_o_url",
-                "Documento IS NOT NULL OR Url IS NOT NULL");
+            e.ToTable(t => t.HasCheckConstraint("CHK_allegato_documento_o_url",
+                "Documento IS NOT NULL OR Url IS NOT NULL"));
 
             e.HasOne(a => a.Scheda)
              .WithMany(s => s.Allegati)
@@ -40,6 +41,7 @@ public class AppDbContext : DbContext
         // ── CATEGORIA ───────────────────────────────────────────
         modelBuilder.Entity<Categoria>(e =>
         {
+            e.ToTable("categoria");
             e.HasKey(c => c.IdCategoria);
             e.Property(c => c.IdCategoria).ValueGeneratedOnAdd();
             e.Property(c => c.Descrizione).HasMaxLength(250);
@@ -88,6 +90,7 @@ public class AppDbContext : DbContext
         // ── ENTE ────────────────────────────────────────────────
         modelBuilder.Entity<Ente>(e =>
         {
+            e.ToTable("ente");
             e.HasKey(en => en.IdEnte);
             e.Property(en => en.IdEnte).ValueGeneratedOnAdd();
             e.Property(en => en.Nome).HasMaxLength(250).IsRequired();
@@ -120,6 +123,7 @@ public class AppDbContext : DbContext
         // ── PROVINCE ────────────────────────────────────────────
         modelBuilder.Entity<Province>(e =>
         {
+            e.ToTable("province");
             e.HasKey(p => p.IdProvincia);
             e.Property(p => p.IdProvincia).ValueGeneratedNever(); // ISTAT
             e.Property(p => p.SiglaProvincia).HasMaxLength(2);
@@ -134,6 +138,7 @@ public class AppDbContext : DbContext
         // ── REGIONI ─────────────────────────────────────────────
         modelBuilder.Entity<Regioni>(e =>
         {
+            e.ToTable("regioni");
             e.HasKey(r => r.IdRegione);
             e.Property(r => r.IdRegione).ValueGeneratedNever(); // ISTAT
             e.Property(r => r.NomeRegione).HasMaxLength(100);
@@ -142,6 +147,7 @@ public class AppDbContext : DbContext
         // ── RUOLI ───────────────────────────────────────────────
         modelBuilder.Entity<Ruoli>(e =>
         {
+            e.ToTable("ruoli");
             e.HasKey(r => r.IdRuolo);
             e.Property(r => r.IdRuolo).ValueGeneratedOnAdd();
             e.Property(r => r.NomeRuolo).HasMaxLength(50);
@@ -162,6 +168,7 @@ public class AppDbContext : DbContext
         // ── SCHEDA ──────────────────────────────────────────────
         modelBuilder.Entity<Scheda>(e =>
         {
+            e.ToTable("scheda");
             e.HasKey(s => s.IdScheda);
             e.Property(s => s.IdScheda).ValueGeneratedOnAdd();
             e.Property(s => s.CodNumerico).HasMaxLength(50);
@@ -189,6 +196,7 @@ public class AppDbContext : DbContext
         // ── UTENTE ──────────────────────────────────────────────
         modelBuilder.Entity<Utente>(e =>
         {
+            e.ToTable("utente");
             e.HasKey(u => u.IdUtente);
             e.Property(u => u.IdUtente).ValueGeneratedOnAdd();
             e.Property(u => u.Nome).HasMaxLength(250).IsRequired();
