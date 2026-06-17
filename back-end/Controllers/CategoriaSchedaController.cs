@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.DTOs;
 
 namespace back_end.Controllers
 {
@@ -53,15 +54,28 @@ namespace back_end.Controllers
             return Ok(scheda);
         }
 
-        // POST: api/CategoriaScheda
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/Categoria Scheda
         [HttpPost]
-        public async Task<ActionResult<CategoriaScheda>> PostCategoriaScheda(CategoriaScheda categoriaScheda)
+        public async Task<ActionResult<CreazioneCategoriaSchedaDTO>> PostCategoriaScheda(CreazioneCategoriaSchedaDTO dto)
         {
-            _context.CategorieSchede.Add(categoriaScheda);
+            // Creiamo l'oggetto di database.
+            var categorieSchede = new CategoriaScheda
+            {
+                IdCategoria = dto.IdCategoria,
+                IdScheda = dto.IdScheda,
+            };
+
+            _context.CategorieSchede.Add(categorieSchede);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategoriaScheda", new { categoriaId = categoriaScheda.IdCategoria, schedaId = categoriaScheda.IdScheda }, categoriaScheda);
+            // Mappiamo l'oggetto appena creato nel DTO di risposta
+            var ruoloDto = new CreazioneCategoriaSchedaDTO
+            {
+                IdCategoria = categorieSchede.IdCategoria,
+                IdScheda = categorieSchede.IdScheda
+            };
+
+            return CreatedAtAction(nameof(GetCategoriaScheda), new { id = categorieSchede.IdScheda }, ruoloDto);
         }
 
         // DELETE: api/CategoriaScheda/5/3
