@@ -4,7 +4,7 @@ namespace InfoGiovani_Back.DTOs;
 public class CreaEModificaEnte
 {
     public int IdEnte { get;private set; }
-    public required string Nome { get; set; }
+    public string? Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
     public string? Telefono1 { get; set; }
     public string? Telefono2 { get; set; }
