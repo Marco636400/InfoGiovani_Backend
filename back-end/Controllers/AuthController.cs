@@ -25,7 +25,7 @@ namespace InfoGiovani_Back.Controllers
             this.tokenService = tokenService;
             this.config = config;
         }
-
+/*
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AuthRequest request)
         {
@@ -47,25 +47,25 @@ namespace InfoGiovani_Back.Controllers
 
             return Created("", new { message = "Utente creato" });
         }
-
+*/
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var utente = await db.Utenti
-                .Include(u => u.Ruolo)                                          // ← cambiato
+                .Include(u => u.Ruolo)                                          
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
             if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password))
                 return Unauthorized(new { error = "Credenziali non valide" });
 
-            var accessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);  // ← cambiato
+            var accessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);  
             var refreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = refreshToken;
             utente.ScadenzaRefreshToken = DateTime.UtcNow.AddDays(
                 int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
             );
-            utente.UltimoLogin = DateTime.UtcNow;                               // ← aggiunto
+            utente.UltimoLogin = DateTime.UtcNow;                              
             await db.SaveChangesAsync();
 
             Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions

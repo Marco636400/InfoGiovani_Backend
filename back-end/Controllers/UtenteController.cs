@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
+using InfoGiovani_Back.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
@@ -44,6 +45,7 @@ namespace back_end.Controllers
 
         // PUT: api/Utente/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /*
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUtente(int id, Utente utente)
         {
@@ -51,6 +53,10 @@ namespace back_end.Controllers
             {
                 return BadRequest();
             }
+
+            //if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
+            //  return Conflict(new { error = "Username già in uso" });
+
 
             _context.Entry(utente).State = EntityState.Modified;
 
@@ -72,12 +78,25 @@ namespace back_end.Controllers
 
             return NoContent();
         }
+*/
 
         // POST: api/Utente
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Utente>> PostUtente(Utente utente)
+        public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
+            if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
+                return Conflict(new { error = "Username già in uso" });
+
+            var utente = new Utente
+            {
+                Nome = dto.Nome,
+                Cognome = dto.Cognome,
+                Username = dto.Username,
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                IdRuolo = dto.IdRuolo,
+                IdUtenteCreazione = dto.IdUtenteLoggato
+            };
+
             _context.Utenti.Add(utente);
             await _context.SaveChangesAsync();
 

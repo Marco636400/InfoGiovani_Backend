@@ -7,7 +7,7 @@ public class Ruoli
     public bool CanCreateUser { get; set; } = false;
     public bool CanCreateEntity { get; set; } = false;
     public bool CanViewCard { get; set; } = false;
-    public required int IdUtenteCreazione { get; set; }
+    public int IdUtenteCreazione { get; set; }
     public DateTime DataCreazione { get;private set; } = DateTime.Now;
     public int? IdUtenteModifica { get; set; }
     public DateTime? DataUltimaModifica { get; set; }
