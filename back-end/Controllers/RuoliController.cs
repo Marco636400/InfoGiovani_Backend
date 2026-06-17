@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
-using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.DTOs;
 
 namespace back_end.Controllers
 {
@@ -43,14 +43,24 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Ruoli/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRuoli(int id, Ruoli ruoli)
+        public async Task<IActionResult> PutRuoli(int id, CreaEModificaRuoliDTO dto)
         {
-            if (id != ruoli.IdRuolo)
+            var ruoli = await _context.Ruoli.FindAsync(id);
+            if (ruoli == null)
             {
-                return BadRequest();
+                return NotFound();
             }
+
+            // Aggiorna le proprietà permesse
+            ruoli.NomeRuolo = dto.NomeRuolo;
+            ruoli.CanCreateUser = dto.CanCreateUser;
+            ruoli.CanCreateEntity = dto.CanCreateEntity;
+            ruoli.CanViewCard = dto.CanViewCard;
+
+            // Campi di tracciamento per la modifica
+            ruoli.IdUtenteModifica = dto.IdUtenteLoggato;
+            ruoli.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(ruoli).State = EntityState.Modified;
 
@@ -74,14 +84,32 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ruoli
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Ruoli>> PostRuoli(Ruoli ruoli)
+        public async Task<ActionResult<CreaEModificaRuoliDTO>> PostRuoli(CreaEModificaRuoliDTO dto)
         {
+            // Creiamo l'oggetto di database. IdRuolo e DataCreazione vengono gestiti in automatico (private set)
+            var ruoli = new Ruoli
+            {
+                NomeRuolo = dto.NomeRuolo,
+                CanCreateUser = dto.CanCreateUser,
+                CanCreateEntity = dto.CanCreateEntity,
+                CanViewCard = dto.CanViewCard,
+                IdUtenteCreazione = dto.IdUtenteLoggato // Valorizzato dall'utente che invia la richiesta
+            };
+
             _context.Ruoli.Add(ruoli);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetRuoli", new { id = ruoli.IdRuolo }, ruoli);
+            // Mappiamo l'oggetto appena creato nel DTO di risposta
+            var ruoloDto = new CreaEModificaRuoliDTO
+            {
+                NomeRuolo = ruoli.NomeRuolo,
+                CanCreateUser = ruoli.CanCreateUser,
+                CanCreateEntity = ruoli.CanCreateEntity,
+                CanViewCard = ruoli.CanViewCard,
+            };
+
+            return CreatedAtAction(nameof(GetRuoli), new { id = ruoli.IdRuolo }, ruoloDto);
         }
 
         // DELETE: api/Ruoli/5

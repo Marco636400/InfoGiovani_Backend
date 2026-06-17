@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
-using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.DTOs;
 
 namespace back_end.Controllers
 {
@@ -42,17 +42,49 @@ namespace back_end.Controllers
             return scheda;
         }
 
-        // PUT: api/Scheda/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/Ruoli/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutScheda(int id, Scheda scheda)
+        public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
         {
-            if (id != scheda.IdScheda)
+            if (string.IsNullOrWhiteSpace(dto.Titolo))
             {
-                return BadRequest();
+                return BadRequest("Il titolo è obbligatorio e non può essere vuoto.");
             }
 
-            _context.Entry(scheda).State = EntityState.Modified;
+            // 2. CONTROLLO (Opzionale): Lunghezza massima del titolo (es. massimo 100 caratteri)
+            if (dto.Titolo.Length > 100)
+            {
+                return BadRequest("Il titolo non può superare i 100 caratteri.");
+            }
+
+            // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
+            bool titoloGiaEsistente = await _context.Schede
+                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim());
+
+            if (titoloGiaEsistente)
+            {
+                return BadRequest($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
+            }
+            var schede = await _context.Schede.FindAsync(id);
+            if (schede == null)
+            {
+                return NotFound();
+            }
+
+            // Aggiorna le proprietà permesse
+            schede.CodNumerico = dto.CodNumerico;
+            schede.CodAlfabetico = dto.CodAlfabetico;
+            schede.Titolo = dto.Titolo;
+            schede.Descrizione = dto.Descrizione;
+            schede.IdEnte = dto.IdEnte;
+            schede.DataScadenza = dto.DataScadenza;
+            schede.IsPrivate = dto.IsPrivate;
+
+            // Campi di tracciamento per la modifica
+            schede.IdUtenteModifica = dto.IdUtenteLoggato;
+            schede.DataUltimaModifica = DateTime.Now;
+
+            _context.Entry(schede).State = EntityState.Modified;
 
             try
             {
@@ -74,15 +106,59 @@ namespace back_end.Controllers
         }
 
         // POST: api/Scheda
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Scheda>> PostScheda(Scheda scheda)
+        public async Task<ActionResult<CreaEModificaSchedaDTO>> PostScheda(CreaEModificaSchedaDTO dto)
         {
-            _context.Schede.Add(scheda);
+            if (string.IsNullOrWhiteSpace(dto.Titolo))
+            {
+                return BadRequest("Il titolo è obbligatorio e non può essere vuoto.");
+            }
+
+            // 2. CONTROLLO (Opzionale): Lunghezza massima del titolo (es. massimo 100 caratteri)
+            if (dto.Titolo.Length > 100)
+            {
+                return BadRequest("Il titolo non può superare i 100 caratteri.");
+            }
+
+            // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
+            bool titoloGiaEsistente = await _context.Schede
+                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim());
+
+            if (titoloGiaEsistente)
+            {
+                return BadRequest($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
+            }
+            // Creiamo l'oggetto di database. IdScheda e DataScadenza vengono gestiti in automatico (private set)
+            var schede = new Scheda
+            {
+                CodNumerico = dto.CodNumerico,
+                CodAlfabetico = dto.CodAlfabetico,
+                Titolo = dto.Titolo,
+                Descrizione = dto.Descrizione,
+                IdEnte = dto.IdEnte, // Valorizzato dall'utente che invia la richiesta
+                IdUtenteCreazione = dto.IdUtenteLoggato,
+                DataScadenza = dto.DataScadenza,
+                IsPrivate = dto.IsPrivate
+            };
+
+            _context.Schede.Add(schede);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetScheda", new { id = scheda.IdScheda }, scheda);
+            // Mappiamo l'oggetto appena creato nel DTO di risposta
+            var ruoloDto = new CreaEModificaSchedaDTO
+            {
+                CodNumerico = schede.CodNumerico,
+                CodAlfabetico = schede.CodAlfabetico,
+                Titolo = schede.Titolo,
+                Descrizione = schede.Descrizione,
+                IdEnte = schede.IdEnte,
+                DataScadenza = schede.DataScadenza,
+                IsPrivate = schede.IsPrivate
+            };
+
+            return CreatedAtAction(nameof(GetScheda), new { id = schede.IdScheda }, ruoloDto);
         }
+
 
         // DELETE: api/Scheda/5
         [HttpDelete("{id}")]
