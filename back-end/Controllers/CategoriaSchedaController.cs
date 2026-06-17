@@ -25,66 +25,32 @@ namespace back_end.Controllers
         [HttpGet("{CategoriaId}")]
         public async Task<ActionResult<IEnumerable<Scheda>>> GetCategorieSchede(int CategoriaId)
         {
-             var famigliari = await _context.CategorieSchede
-                .Where(f => f.IdCategoria == CategoriaId)
-                .Join(
-                    _context.Schede,
-                    f => f.IdScheda, 
-                    c => c.IdScheda,
-                    (f, c) => c
-                )
-                .ToListAsync();
+            var famigliari = await _context.CategorieSchede
+               .Where(f => f.IdCategoria == CategoriaId)
+               .Join(
+                   _context.Schede,
+                   f => f.IdScheda,
+                   c => c.IdScheda,
+                   (f, c) => c
+               )
+               .ToListAsync();
 
             return Ok(famigliari);
         }
 
         // GET: api/CategoriaScheda/5/3
-        [HttpGet("{CategoriaId}/{SchedaId}")]
-        public async Task<ActionResult<CategoriaScheda>> GetCategoriaScheda(int CategoriaId,int SchedaId)
+        [HttpGet("{categoriaId}/{schedaId}")]
+        public async Task<ActionResult<Scheda>> GetCategoriaScheda(int categoriaId, int schedaId)
         {
-            var esiste = await _context.CategorieSchede
-                .AnyAsync(f => f.IdCategoria == CategoriaId && f.IdScheda == SchedaId);
-
-            if (!esiste)
-                return NotFound();
-
-            var scheda = await _context.Schede.FindAsync(SchedaId);
+            var scheda = await _context.CategorieSchede
+                .Where(f => f.IdCategoria == categoriaId && f.IdScheda == schedaId)
+                .Select(f => f.Scheda)
+                .FirstOrDefaultAsync();
 
             if (scheda == null)
                 return NotFound();
-            
+
             return Ok(scheda);
-        }
-
-        // PUT: api/CategoriaScheda/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategoriaScheda(int id, CategoriaScheda categoriaScheda)
-        {
-            if (id != categoriaScheda.IdCategoriaScheda)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(categoriaScheda).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoriaSchedaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // POST: api/CategoriaScheda
@@ -95,28 +61,23 @@ namespace back_end.Controllers
             _context.CategorieSchede.Add(categoriaScheda);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategoriaScheda", new { id = categoriaScheda.IdCategoriaScheda }, categoriaScheda);
+            return CreatedAtAction("GetCategoriaScheda", new { categoriaId = categoriaScheda.IdCategoria, schedaId = categoriaScheda.IdScheda }, categoriaScheda);
         }
 
-        // DELETE: api/CategoriaScheda/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategoriaScheda(int id)
+        // DELETE: api/CategoriaScheda/5/3
+        [HttpDelete("{categoriaId}/{schedaId}")]
+        public async Task<IActionResult> DeleteCategoriaScheda(int categoriaId, int schedaId)
         {
-            var categoriaScheda = await _context.CategorieSchede.FindAsync(id);
+            var categoriaScheda = await _context.CategorieSchede
+                .FirstOrDefaultAsync(f => f.IdCategoria == categoriaId && f.IdScheda == schedaId);
+
             if (categoriaScheda == null)
-            {
                 return NotFound();
-            }
 
             _context.CategorieSchede.Remove(categoriaScheda);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool CategoriaSchedaExists(int id)
-        {
-            return _context.CategorieSchede.Any(e => e.IdCategoriaScheda == id);
         }
     }
 }
