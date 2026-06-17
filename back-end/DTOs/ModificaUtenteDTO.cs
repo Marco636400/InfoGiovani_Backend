@@ -1,11 +1,9 @@
-namespace InfoGiovani_Back.Models;
+namespace InfoGiovani_Back.DTOs;
 
-public class Utente
+public class ModificaUtenteDTO
 {
-    public int IdUtente { get; private set; }//private perche non puoi impostarlo dall'esterno, ma solo dal DB
     public required string Nome { get; set; }
     public string? Cognome { get; set; }
-    public required string Username { get; set; }
     public required string Password { get; set; }
     public bool Disabilita { get; set; } = false;
     public required int IdRuolo { get; set; }
@@ -19,7 +17,4 @@ public class Utente
 
     // Calcolata dal DB
     public string? NomeUtente { get; set; }
-
-    // Navigation
-    public Ruoli Ruolo { get; set; } = null!;
 }
