@@ -62,7 +62,7 @@ namespace back_end.Controllers
             enti.Indirizzo = dto.Indirizzo;
             enti.Url = dto.Url;
             enti.Contatto = dto.Contatto;
-
+            enti.IdCitta = dto.IdCitta;
             // Campi di tracciamento per la modifica
             enti.IdUtenteModifica = dto.IdUtenteLoggato;
             enti.DataUltimaModifica = DateTime.Now;
@@ -104,7 +104,8 @@ namespace back_end.Controllers
                 Indirizzo = dto.Indirizzo,
                 Url = dto.Url,
                 Contatto = dto.Contatto,
-                IdUtenteCreazione = dto.IdUtenteLoggato
+                IdUtenteCreazione = dto.IdUtenteLoggato,
+                IdCitta = dto.IdCitta
             };
 
             _context.Enti.Add(ente);
@@ -123,7 +124,7 @@ namespace back_end.Controllers
                 Url = ente.Url,
                 Contatto = ente.Contatto,
                 IdUtenteLoggato = ente.IdUtenteCreazione,
-                IdCitta = dto.IdCitta
+                IdCitta = ente.IdCitta
             };
 
             return CreatedAtAction(nameof(GetEnte), new { id = ente.IdEnte }, ruoloDto);

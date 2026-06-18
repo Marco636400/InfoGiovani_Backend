@@ -59,7 +59,7 @@ namespace back_end.Controllers
 
             // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
             bool titoloGiaEsistente = await _context.Schede
-                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim());
+                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim()&& s.IdScheda != id);
 
             if (titoloGiaEsistente)
             {

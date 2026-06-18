@@ -2,9 +2,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using InfoGiovani_Back.Models;
-/// <summary>
-/// Servizio per generare access token e refresh token per l'autenticazione JWT
-/// </summary>
+
 public class TokenService
 {
     private readonly IConfiguration config;
@@ -25,14 +23,13 @@ public class TokenService
 
             var claims = new[]
         {
-        new Claim(JwtRegisteredClaimNames.Sub, utente.Username),
+        new Claim(JwtRegisteredClaimNames.Sub, utente.IdUtente.ToString()),
         new Claim(JwtRegisteredClaimNames.Iat,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
             ClaimValueTypes.Integer64),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         new Claim("token_type", "access"),
 
-        // Permessi dal ruolo
         new Claim("IdRuolo", utente.IdRuolo.ToString()),
         new Claim("CanCreateUser", ruolo.CanCreateUser.ToString()),
         new Claim("CanCreateEntity", ruolo.CanCreateEntity.ToString()),
@@ -54,10 +51,6 @@ public class TokenService
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
-    /// <summary>
-    /// Genera un refresh token, stringa casuale opaca, NON un JWT. Deve essere salvata nel DB associata all'utente, per poterla revocare in futuro se necessario.
-    /// </summary>
-    /// <returns></returns>
     public string GenerateRefreshToken()
     {
         var bytes = new byte[64];

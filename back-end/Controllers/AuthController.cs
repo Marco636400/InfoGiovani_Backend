@@ -25,29 +25,7 @@ namespace InfoGiovani_Back.Controllers
             this.tokenService = tokenService;
             this.config = config;
         }
-/*
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] AuthRequest request)
-        {
-            if (await db.Utenti.AnyAsync(u => u.Username == request.Username))
-                return Conflict(new { error = "Username già in uso" });
 
-            var utente = new Utente
-            { //da modificare, probabilmente servirà un dto per la registrazione con più campi
-              //
-                Username = request.Username,
-                Nome = request.Username,
-                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                IdRuolo = 1,
-                IdUtenteCreazione = 1
-            };
-
-            db.Utenti.Add(utente);
-            await db.SaveChangesAsync();
-
-            return Created("", new { message = "Utente creato" });
-        }
-*/
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
