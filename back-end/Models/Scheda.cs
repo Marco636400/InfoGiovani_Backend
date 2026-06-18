@@ -14,6 +14,7 @@ public class Scheda
     public int? IdEnte { get; set; }
     public DateTime? DataScadenza { get; set; }
     public bool IsPrivate { get; set; } = false;
+    public bool Disabilita { get; set; } = false;
 
     // Navigation
     public Utente UtenteCreazione { get; set; } = null!;

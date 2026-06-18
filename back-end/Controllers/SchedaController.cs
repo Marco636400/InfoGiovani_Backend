@@ -42,7 +42,7 @@ namespace back_end.Controllers
             return scheda;
         }
 
-        // PUT: api/Ruoli/5
+        // PUT: api/Scheda/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
         {
