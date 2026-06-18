@@ -26,11 +26,7 @@ public class AppDbContext : DbContext
             e.HasKey(a => a.IdAllegato);
             e.Property(a => a.IdAllegato).ValueGeneratedOnAdd();
             e.Property(a => a.Nome).HasMaxLength(255).IsRequired();
-            e.Property(a => a.Estensione).HasMaxLength(5);
-            e.Property(a => a.Url).HasMaxLength(500);
-
-            e.ToTable(t => t.HasCheckConstraint("CHK_allegato_documento_o_url",
-                "Documento IS NOT NULL OR Url IS NOT NULL"));
+            e.Property(a => a.Url).HasMaxLength(500).IsRequired();
 
             e.HasOne(a => a.Scheda)
              .WithMany(s => s.Allegati)
