@@ -1,10 +1,10 @@
 using InfoGiovani_Back.Models;
 namespace InfoGiovani_Back.DTOs;
 
-public class CreaEModificaEnte
+public class CreaEModificaEnteDTO
 {
-    public int IdEnte { get;private set; }
-    public string? Nome { get; set; }
+    public int IdEnte { get; set; }
+    public required string Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
     public string? Telefono1 { get; set; }
     public string? Telefono2 { get; set; }
@@ -13,7 +13,7 @@ public class CreaEModificaEnte
     public string? Indirizzo { get; set; }
     public string? Url { get; set; }
     public string? Contatto { get; set; }
-
+    public int IdUtenteLoggato { get; set; }
     // Navigation
     public int? IdCitta { get; set; }
 }

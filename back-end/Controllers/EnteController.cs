@@ -6,7 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
-using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.DTOs;
+
 
 namespace back_end.Controllers
 {
@@ -25,7 +26,7 @@ namespace back_end.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ente>>> GetEnti()
         {
-            return await _context.Enti.ToListAsync();
+            return Ok(await _context.Enti.ToListAsync());
         }
 
         // GET: api/Ente/5
@@ -41,18 +42,33 @@ namespace back_end.Controllers
 
             return ente;
         }
-
         // PUT: api/Ente/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEnte(int id, Ente ente)
+        public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
         {
-            if (id != ente.IdEnte)
+            var enti = await _context.Enti.FindAsync(id);
+            if (enti == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(ente).State = EntityState.Modified;
+            // Aggiorna le proprietà permesse
+            enti.IdEnte = dto.IdEnte;
+            enti.Nome = dto.Nome;
+            enti.DescrizioneEnte = dto.DescrizioneEnte;
+            enti.Telefono1 = dto.Telefono1;
+            enti.Telefono2 = dto.Telefono2;
+            enti.Fax = dto.Fax;
+            enti.Email = dto.Email;
+            enti.Indirizzo = dto.Indirizzo;
+            enti.Url = dto.Url;
+            enti.Contatto = dto.Contatto;
+
+            // Campi di tracciamento per la modifica
+            enti.IdUtenteModifica = dto.IdUtenteLoggato;
+            enti.DataUltimaModifica = DateTime.Now;
+
+            _context.Entry(enti).State = EntityState.Modified;
 
             try
             {
@@ -74,15 +90,48 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ente
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Ente>> PostEnte(Ente ente)
+        public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
         {
+            // Creiamo l'oggetto di database.
+            var ente = new Ente
+            {
+                Nome = dto.Nome,
+                DescrizioneEnte = dto.DescrizioneEnte,
+                Telefono1 = dto.Telefono1,
+                Telefono2 = dto.Telefono2,
+                Fax = dto.Fax,
+                Email = dto.Email,
+                Indirizzo = dto.Indirizzo,
+                Url = dto.Url,
+                Contatto = dto.Contatto,
+                IdUtenteCreazione = dto.IdUtenteLoggato
+            };
+
             _context.Enti.Add(ente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetEnte", new { id = ente.IdEnte }, ente);
+            // Mappiamo l'oggetto appena creato nel DTO di risposta
+            var ruoloDto = new CreaEModificaEnteDTO
+            {
+                IdEnte = ente.IdEnte,
+                Nome = ente.Nome,
+                DescrizioneEnte = ente.DescrizioneEnte,
+                Telefono1 = ente.Telefono1,
+                Telefono2 = ente.Telefono2,
+                Fax = ente.Fax,
+                Email = ente.Email,
+                Indirizzo = ente.Indirizzo,
+                Url = ente.Url,
+                Contatto = ente.Contatto,
+                IdUtenteLoggato = ente.IdUtenteCreazione,
+                IdCitta = dto.IdCitta
+            };
+
+            return CreatedAtAction(nameof(GetEnte), new { id = ente.IdEnte }, ruoloDto);
         }
+
+
 
         // DELETE: api/Ente/5
         [HttpDelete("{id}")]
