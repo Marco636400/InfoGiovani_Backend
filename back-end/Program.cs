@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using InfoGiovani_Back.Middleware;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,21 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IAuthorizationHandler, PermessoAuthorizationHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanCreateUser", policy =>
+        policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanCreateUser))));
+
+    options.AddPolicy("CanCreateEntity", policy =>
+        policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanCreateEntity))));
+
+    options.AddPolicy("CanViewCard", policy =>
+        policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanViewCard))));
+});
+
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -77,15 +92,15 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-app.UseCors("LanPolicy");       
-app.UseAuthentication();       
+app.UseCors("LanPolicy");
+app.UseAuthentication();
+app.UseIdentitaUtente();
 app.UseAuthorization();
-app.MapControllers();           
+app.MapControllers();
 app.Run();

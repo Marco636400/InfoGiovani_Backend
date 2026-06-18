@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
+using Microsoft.AspNetCore.Authorization; 
 
 namespace back_end.Controllers
 {
@@ -43,6 +44,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Ruoli/5
+        //[Authorize(Policy = "CanCreateUser")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRuoli(int id, CreaEModificaRuoliDTO dto)
         {
@@ -84,6 +86,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ruoli
+        //[Authorize(Policy = "CanCreateUser")]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaRuoliDTO>> PostRuoli(CreaEModificaRuoliDTO dto)
         {
