@@ -5,7 +5,7 @@ public class Ente
     public int IdEnte { get; set; }
     public required string Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
-    public int? IdCitta { get; private set; }
+    public int? IdCitta { get; set; }
     public string? Telefono1 { get; set; }
     public string? Telefono2 { get; set; }
     public string? Fax { get; set; }
