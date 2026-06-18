@@ -24,9 +24,35 @@ namespace back_end.Controllers
 
         // GET: api/Utente
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Utente>>> GetUtenti()
+        public async Task<IActionResult> GetUtenti(int idUtenteLoggato)
         {
-            return await _context.Utenti.ToListAsync();
+            // Prendiamo tutti gli utenti DAL DATABASE TRANNE quello loggato
+            var utentiFiltrati = await _context.Utenti
+                .Where(u => u.IdUtente != idUtenteLoggato)
+                .Select(u => new
+                {
+                    IdUtente = u.IdUtente,
+                    Nome = u.Nome,
+                    Cognome = u.Cognome,
+                    Username = u.Username,
+                    Disabilita = u.Disabilita,
+                    IdRuolo = u.IdRuolo,
+                    IdUtenteCreazione = u.IdUtenteCreazione,
+                    DataCreazione = u.DataCreazione,
+                    IdUtenteModifica = u.IdUtenteModifica,
+                    DataUltimaModifica = u.DataUltimaModifica,
+                    UltimoLogin = u.UltimoLogin,
+                    NomeUtente = u.NomeUtente
+                })
+                .ToListAsync();
+
+            // Se la lista è vuota (ovvero non ci sono ALTRI utenti registrati), restituisce NotFound
+            if (!utentiFiltrati.Any())
+            {
+                return NotFound("Nessun altro utente trovato nel sistema.");
+            }
+
+            return Ok(utentiFiltrati);
         }
 
         // GET: api/Utente/5
@@ -45,17 +71,16 @@ namespace back_end.Controllers
 
         // PUT: api/Utente/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        /*
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUtente(int id, Utente utente)
+        public async Task<IActionResult> PutUtente(int id, Utente utente, ModificaUtenteDTO dto)
         {
             if (id != utente.IdUtente)
             {
                 return BadRequest();
             }
 
-            //if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
-            //  return Conflict(new { error = "Username già in uso" });
+            if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
+                return Conflict(new { error = "Username già in uso" });
 
 
             _context.Entry(utente).State = EntityState.Modified;
@@ -78,11 +103,10 @@ namespace back_end.Controllers
 
             return NoContent();
         }
-*/
 
         // POST: api/Utente
         [HttpPost]
-        public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
+        public async Task<ActionResult<Utente>> PostUtente(CreaEModificaUtenteDTO dto)
         {
             if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
                 return Conflict(new { error = "Username già in uso" });
@@ -102,23 +126,29 @@ namespace back_end.Controllers
 
             return CreatedAtAction("GetUtente", new { id = utente.IdUtente }, utente);
         }
-
         // DELETE: api/Utente/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUtente(int id)
+        public async Task<IActionResult> DeleteUtente(int id, int idUtenteLoggato)//sostituire idutenteloggato con utente loggato jwt
         {
+            // 1. CONTROLLO CRUCIALE: L'utente non può auto-eliminarsi
+            if (id == idUtenteLoggato)
+            {
+                return BadRequest("Operazione non consentita: non puoi eliminare il tuo stesso account.");
+            }
+
+            // 2. Cerchiamo l'utente nel database
             var utente = await _context.Utenti.FindAsync(id);
             if (utente == null)
             {
-                return NotFound();
+                return NotFound($"Utente con ID {id} non trovato.");
             }
 
+            // 3. Se supera i controlli, procediamo con l'eliminazione
             _context.Utenti.Remove(utente);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-
         private bool UtenteExists(int id)
         {
             return _context.Utenti.Any(e => e.IdUtente == id);

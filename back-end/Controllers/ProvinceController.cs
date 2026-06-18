@@ -29,17 +29,28 @@ namespace back_end.Controllers
         }
 
         // GET: api/Province/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Province>> GetProvince(int id)
+        [HttpGet("{idRegione}")]
+        public async Task<IActionResult> GetProvincePerRegione(int idRegione)
         {
-            var province = await _context.Province.FindAsync(id);
+            // Filtriamo la tabella Province cercando solo quelle che hanno l'IdRegione richiesto
+            var provinceFiltrate = await _context.Province
+                .Where(p => p.IdRegione == idRegione)
+                .Select(p => new
+                {
+                    IdProvincia = p.IdProvincia,
+                    IdRegione = p.IdRegione,
+                    SiglaProvincia = p.SiglaProvincia,
+                    NomeProvincia = p.NomeProvincia
+                })
+                .ToListAsync();
 
-            if (province == null)
+            // Se la lista è vuota, significa che la regione non esiste o non ha province caricate
+            if (!provinceFiltrate.Any())
             {
-                return NotFound();
+                return NotFound($"Nessuna provincia trovata per la regione con ID {idRegione}.");
             }
 
-            return province;
+            return Ok(provinceFiltrate);
         }
 
         private bool ProvinceExists(int id)
