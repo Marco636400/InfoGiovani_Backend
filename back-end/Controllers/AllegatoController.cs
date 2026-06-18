@@ -35,47 +35,63 @@ namespace back_end.Controllers
 
 
 
-        // GET: api/Allegato
-
-        [HttpGet]
-
-        public async Task<ActionResult<IEnumerable<Allegato>>> GetAllegati()
-
-        {
-
-            return await _context.Allegati.ToListAsync();
-
-        }
-
-
-
         // GET: api/Allegato/5
-
-        [HttpGet("{id}")]
-
-        public async Task<ActionResult<Allegato>> GetAllegato(int id)
-
+        [HttpGet("{idScheda}")]
+        public async Task<IActionResult> GetAllegati(int? idScheda)
         {
+            // Partiamo dalla query base sugli Allegati
+            var query = _context.Allegati.AsQueryable();
 
-            var allegato = await _context.Allegati.FindAsync(id);
-
-
-
-            if (allegato == null)
-
+            // Se l'utente ha passato l'idScheda nella query string, filtriamo!
+            if (idScheda.HasValue)
             {
-
-                return NotFound();
-
+                query = query.Where(a => a.IdScheda == idScheda.Value);
             }
 
+            // Estraiamo i dati usando un tipo anonimo per evitare errori sul private set
+            var risultato = await query
+                .Select(a => new
+                {
+                    IdAllegato = a.IdAllegato,
+                    IdScheda = a.IdScheda,
+                    Nome = a.Nome,
+                    Estensione = a.Estensione,
+                    Url = a.Url,
+                    Documento = a.Documento
+                })
+                .ToListAsync();
 
-
-            return allegato;
-
+            return Ok(risultato);
         }
 
 
+
+        // GET: api/Allegato/5/2
+        [HttpGet("{id} , {idScheda}")]
+        public async Task<IActionResult> GetAllegato(int id, int idScheda)
+        {
+            // Cerchiamo l'allegato che corrisponde SIA all'id dell'allegato SIA all'id della scheda
+            var allegato = await _context.Allegati
+                .Where(a => a.IdAllegato == id && a.IdScheda == idScheda)
+                .Select(a => new
+                {
+                    IdAllegato = a.IdAllegato,
+                    IdScheda = a.IdScheda,
+                    Nome = a.Nome,
+                    Estensione = a.Estensione,
+                    Url = a.Url,
+                    Documento = a.Documento
+                })
+                .FirstOrDefaultAsync();
+
+            if (allegato == null)
+            {
+                // Ritorna 404 se l'allegato non esiste OPPURE se esiste ma appartiene a un'altra scheda
+                return NotFound("Allegato non trovato o non associato a questa scheda.");
+            }
+
+            return Ok(allegato);
+        }
 
         // PUT: api/Allegato/5
 

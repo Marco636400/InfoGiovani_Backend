@@ -29,19 +29,27 @@ namespace back_end.Controllers
         }
 
         // GET: api/Citta/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Citta>> GetCitta(int id)
+        [HttpGet("{idProvincia}")]
+        public async Task<IActionResult> GetCittaPerProvincia(int idProvincia)
         {
-            var citta = await _context.Citta.FindAsync(id);
+            var cittaFiltrate = await _context.Citta
+                .Where(c => c.IdProvincia == idProvincia)
+                .Select(c => new
+                {
+                    IdCitta = c.IdCitta,
+                    NomeCitta = c.NomeCitta,
+                    IdProvincia = c.IdProvincia
+                })
+                .ToListAsync();
 
-            if (citta == null)
+            // Se l'array è vuoto, lanciamo il NotFound come hai chiesto
+            if (!cittaFiltrate.Any())
             {
-                return NotFound();
+                return NotFound($"Nessuna città trovata per la provincia con ID {idProvincia}.");
             }
 
-            return citta;
+            return Ok(cittaFiltrate);
         }
-
         private bool CittaExists(int id)
         {
             return _context.Citta.Any(e => e.IdCitta == id);
