@@ -36,7 +36,7 @@ namespace InfoGiovani_Back.Controllers
             if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password))
                 return Unauthorized(new { error = "Credenziali non valide" });
 
-            var accessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);  
+            var accessToken = tokenService.GenerateAccessToken(utente);  
             var refreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = refreshToken;
@@ -74,7 +74,7 @@ namespace InfoGiovani_Back.Controllers
             if (utente == null || utente.ScadenzaRefreshToken < DateTime.UtcNow)
                 return Unauthorized(new { error = "Refresh token non valido o scaduto" });
 
-            var newAccessToken = tokenService.GenerateAccessToken(utente, utente.Ruolo);
+            var newAccessToken = tokenService.GenerateAccessToken(utente);
             var newRefreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = newRefreshToken;
