@@ -1,6 +1,6 @@
 namespace InfoGiovani_Back.DTOs;
 
-public class CreaEModificaUtenteDTO
+public class CreazioneUtenteDTO
 {
     public required string Nome { get; set; }
     public string? Cognome { get; set; }

@@ -106,7 +106,7 @@ namespace back_end.Controllers
 
         // POST: api/Utente
         [HttpPost]
-        public async Task<ActionResult<Utente>> PostUtente(CreaEModificaUtenteDTO dto)
+        public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
             if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
                 return Conflict(new { error = "Username già in uso" });

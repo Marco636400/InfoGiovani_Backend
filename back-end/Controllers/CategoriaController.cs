@@ -94,6 +94,22 @@ namespace back_end.Controllers
                 return NotFound();
             }
 
+            //la categoria non può essere eliminata se ha schede collegate
+            bool haSchedeCollegate = await _context.CategorieSchede
+                .AnyAsync(cs => cs.IdCategoria == id);
+            if (haSchedeCollegate)
+            {
+                return BadRequest("Impossibile eliminare la categoria: sono presenti schede collegate");
+            }
+
+            //la categoria non può essere eliminata se ha sottocategorie figlie
+            bool haSottocategorie = await _context.Categorie
+                .AnyAsync(c => c.IdParents == id);
+            if (haSottocategorie)
+            {
+                return BadRequest("Impossibile eliminare la categoria: sono presenti sottocategorie collegate");
+            }
+
             _context.Categorie.Remove(categoria);
             await _context.SaveChangesAsync();
 

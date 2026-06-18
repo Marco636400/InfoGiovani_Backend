@@ -143,6 +143,13 @@ namespace back_end.Controllers
                 return NotFound();
             }
 
+            // Controllo: l'ente non può essere eliminato se ha schede collegate
+            bool haSchedeCollegate = await _context.Schede.AnyAsync(s => s.IdEnte == id);
+            if (haSchedeCollegate)
+            {
+                return BadRequest("Impossibile eliminare l'ente: sono presenti schede collegate");
+            }
+
             _context.Enti.Remove(ente);
             await _context.SaveChangesAsync();
 
