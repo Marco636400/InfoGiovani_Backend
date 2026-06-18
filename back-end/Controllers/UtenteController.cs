@@ -70,18 +70,32 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Utente/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUtente(int id, Utente utente, ModificaUtenteDTO dto)
+        public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {
-            if (id != utente.IdUtente)
+            var utente = await _context.Utenti.FindAsync(id);
+            if (utente == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
+            // Controllo univocità username, escludendo l'utente stesso
+            bool usernameInUso = await _context.Utenti
+                .AnyAsync(u => u.Username == dto.Username && u.IdUtente != id);
+            if (usernameInUso)
+            {
                 return Conflict(new { error = "Username già in uso" });
+            }
 
+            // Aggiorna le proprietà permesse
+            utente.Nome = dto.Nome ?? utente.Nome;
+            utente.Cognome = dto.Cognome;
+            utente.Username = dto.Username;
+            utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            utente.IdRuolo = dto.IdRuolo;
+            utente.Disabilita = dto.Disabilita;
+
+            utente.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(utente).State = EntityState.Modified;
 
@@ -103,8 +117,6 @@ namespace back_end.Controllers
 
             return NoContent();
         }
-
-        // POST: api/Utente
         [HttpPost]
         public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {

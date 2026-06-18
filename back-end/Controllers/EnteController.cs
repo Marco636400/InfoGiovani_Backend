@@ -53,7 +53,6 @@ namespace back_end.Controllers
             }
 
             // Aggiorna le proprietà permesse
-            enti.IdEnte = dto.IdEnte;
             enti.Nome = dto.Nome;
             enti.DescrizioneEnte = dto.DescrizioneEnte;
             enti.Telefono1 = dto.Telefono1;
@@ -114,7 +113,6 @@ namespace back_end.Controllers
             // Mappiamo l'oggetto appena creato nel DTO di risposta
             var ruoloDto = new CreaEModificaEnteDTO
             {
-                IdEnte = ente.IdEnte,
                 Nome = ente.Nome,
                 DescrizioneEnte = ente.DescrizioneEnte,
                 Telefono1 = ente.Telefono1,

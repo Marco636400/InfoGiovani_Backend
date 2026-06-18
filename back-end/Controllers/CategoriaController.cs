@@ -7,118 +7,155 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
-
-namespace back_end.Controllers
+using InfoGiovani_Back.DTOs;
+[Route("api/[controller]")]
+[ApiController]
+public class CategoriaController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CategoriaController : ControllerBase
+    private readonly AppDbContext _context;
+
+    public CategoriaController(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public CategoriaController(AppDbContext context)
+    // GET: api/Categoria
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<GetCategoriaDTO>>> GetCategorie()
+    {
+        var categorie = await _context.Categorie
+            .Select(c => new GetCategoriaDTO
+            {
+                IdCategoria = c.IdCategoria,
+                IdParents = c.IdParents,
+                Descrizione = c.Descrizione,
+                Disabilita = c.Disabilita,
+                IsPrivate = c.IsPrivate
+            })
+            .ToListAsync();
+
+        return Ok(categorie);
+    }
+
+    // GET: api/Categoria/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<GetCategoriaDTO>> GetCategoria(int id)
+    {
+        var categoria = await _context.Categorie
+            .Where(c => c.IdCategoria == id)
+            .Select(c => new GetCategoriaDTO
+            {
+                IdCategoria = c.IdCategoria,
+                IdParents = c.IdParents,
+                Descrizione = c.Descrizione,
+                Disabilita = c.Disabilita,
+                IsPrivate = c.IsPrivate
+            })
+            .FirstOrDefaultAsync();
+
+        if (categoria == null)
         {
-            _context = context;
+            return NotFound();
         }
 
-        // GET: api/Categoria
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorie()
+        return categoria;
+    }
+
+    // PUT: api/Categoria/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutCategoria(int id, CreaEModificaCategoriaDTO dto)
+    {
+        var categoria = await _context.Categorie.FindAsync(id);
+        if (categoria == null)
         {
-            return await _context.Categorie.ToListAsync();
+            return NotFound();
         }
 
-        // GET: api/Categoria/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Categoria>> GetCategoria(int id)
-        {
-            var categoria = await _context.Categorie.FindAsync(id);
+        categoria.IdParents = dto.IdParents;
+        categoria.Descrizione = dto.Descrizione;
+        categoria.Disabilita = dto.Disabilita;
+        categoria.IsPrivate = dto.IsPrivate;
 
-            if (categoria == null)
+        _context.Entry(categoria).State = EntityState.Modified;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CategoriaExists(id))
             {
                 return NotFound();
             }
-
-            return categoria;
+            else
+            {
+                throw;
+            }
         }
 
-        // PUT: api/Categoria/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategoria(int id, Categoria categoria)
+        return NoContent();
+    }
+
+    // POST: api/Categoria
+    [HttpPost]
+    public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaEModificaCategoriaDTO dto)
+    {
+        var categoria = new Categoria
         {
-            if (id != categoria.IdCategoria)
-            {
-                return BadRequest();
-            }
+            IdParents = dto.IdParents,
+            Descrizione = dto.Descrizione,
+            Disabilita = dto.Disabilita,
+            IsPrivate = dto.IsPrivate
+        };
 
-            _context.Entry(categoria).State = EntityState.Modified;
+        _context.Categorie.Add(categoria);
+        await _context.SaveChangesAsync();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoriaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Categoria
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Categoria>> PostCategoria(Categoria categoria)
+        var risultato = new GetCategoriaDTO
         {
-            _context.Categorie.Add(categoria);
-            await _context.SaveChangesAsync();
+            IdCategoria = categoria.IdCategoria,
+            IdParents = categoria.IdParents,
+            Descrizione = categoria.Descrizione,
+            Disabilita = categoria.Disabilita,
+            IsPrivate = categoria.IsPrivate
+        };
 
-            return CreatedAtAction("GetCategoria", new { id = categoria.IdCategoria }, categoria);
-        }
+        return CreatedAtAction(nameof(GetCategoria), new { id = categoria.IdCategoria }, risultato);
+    }
 
-        // DELETE: api/Categoria/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategoria(int id)
+    // DELETE: api/Categoria/5 — logica esistente invariata
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCategoria(int id)
+    {
+        var categoria = await _context.Categorie.FindAsync(id);
+        if (categoria == null)
         {
-            var categoria = await _context.Categorie.FindAsync(id);
-            if (categoria == null)
-            {
-                return NotFound();
-            }
-
-            //la categoria non può essere eliminata se ha schede collegate
-            bool haSchedeCollegate = await _context.CategorieSchede
-                .AnyAsync(cs => cs.IdCategoria == id);
-            if (haSchedeCollegate)
-            {
-                return BadRequest("Impossibile eliminare la categoria: sono presenti schede collegate");
-            }
-
-            //la categoria non può essere eliminata se ha sottocategorie figlie
-            bool haSottocategorie = await _context.Categorie
-                .AnyAsync(c => c.IdParents == id);
-            if (haSottocategorie)
-            {
-                return BadRequest("Impossibile eliminare la categoria: sono presenti sottocategorie collegate");
-            }
-
-            _context.Categorie.Remove(categoria);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return NotFound();
         }
 
-        private bool CategoriaExists(int id)
+        bool haSchedeCollegate = await _context.CategorieSchede
+            .AnyAsync(cs => cs.IdCategoria == id);
+        if (haSchedeCollegate)
         {
-            return _context.Categorie.Any(e => e.IdCategoria == id);
+            return BadRequest("Impossibile eliminare la categoria: sono presenti schede collegate");
         }
+
+        bool haSottocategorie = await _context.Categorie
+            .AnyAsync(c => c.IdParents == id);
+        if (haSottocategorie)
+        {
+            return BadRequest("Impossibile eliminare la categoria: sono presenti sottocategorie collegate");
+        }
+
+        _context.Categorie.Remove(categoria);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool CategoriaExists(int id)
+    {
+        return _context.Categorie.Any(e => e.IdCategoria == id);
     }
 }
