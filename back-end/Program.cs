@@ -76,7 +76,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:4200",
-                "https://tuodominio.it"
+                "https://radici.orientarti.it"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
