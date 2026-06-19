@@ -57,16 +57,32 @@ namespace back_end.Controllers
 
         // GET: api/Utente/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Utente>> GetUtente(int id)
+        public async Task<ActionResult> GetUtente(int id)
         {
-            var utente = await _context.Utenti.FindAsync(id);
+            var utente = await _context.Utenti
+            .Where(u => u.IdUtente == id)
+                .Select(u => new
+                {
+                    IdUtente = u.IdUtente,
+                    Nome = u.Nome,
+                    Cognome = u.Cognome,
+                    Username = u.Username,
+                    Disabilita = u.Disabilita,
+                    IdRuolo = u.IdRuolo,
+                    IdUtenteCreazione = u.IdUtenteCreazione,
+                    DataCreazione = u.DataCreazione,
+                    IdUtenteModifica = u.IdUtenteModifica,
+                    DataUltimaModifica = u.DataUltimaModifica,
+                    UltimoLogin = u.UltimoLogin,
+                    NomeUtente = u.NomeUtente
+                }).FirstOrDefaultAsync();
 
             if (utente == null)
             {
                 return NotFound();
             }
 
-            return utente;
+            return Ok(utente);
         }
 
         // PUT: api/Utente/5

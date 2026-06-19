@@ -79,6 +79,7 @@ namespace back_end.Controllers
             schede.IdEnte = dto.IdEnte;
             schede.DataScadenza = dto.DataScadenza;
             schede.IsPrivate = dto.IsPrivate;
+            schede.Disabilita = dto.Disabilita;
 
             // Campi di tracciamento per la modifica
             schede.IdUtenteModifica = dto.IdUtenteLoggato;
@@ -138,7 +139,8 @@ namespace back_end.Controllers
                 IdEnte = dto.IdEnte, // Valorizzato dall'utente che invia la richiesta
                 IdUtenteCreazione = dto.IdUtenteLoggato,
                 DataScadenza = dto.DataScadenza,
-                IsPrivate = dto.IsPrivate
+                IsPrivate = dto.IsPrivate,
+                Disabilita = dto.Disabilita
             };
 
             _context.Schede.Add(schede);

@@ -30,7 +30,7 @@ namespace back_end.Controllers
 
         // GET: api/Regioni/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Regioni>> GetRegioni(int id)
+        public async Task<ActionResult<Regioni>> GetRegione(int id)
         {
             var regioni = await _context.Regioni.FindAsync(id);
 
@@ -40,37 +40,6 @@ namespace back_end.Controllers
             }
 
             return regioni;
-        }
-
-        // PUT: api/Regioni/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRegioni(int id, Regioni regioni)
-        {
-            if (id != regioni.IdRegione)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(regioni).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RegioniExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         private bool RegioniExists(int id)
