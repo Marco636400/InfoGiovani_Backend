@@ -30,30 +30,28 @@ namespace InfoGiovani_Back.Controllers
         public async Task<IActionResult> Login([FromBody] AuthRequest request)
         {
             var utente = await db.Utenti
-                .Include(u => u.Ruolo)                                          
+                .Include(u => u.Ruolo)
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
             if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password))
                 return Unauthorized(new { error = "Credenziali non valide" });
 
-            var accessToken = tokenService.GenerateAccessToken(utente);  
+            var accessToken = tokenService.GenerateAccessToken(utente);
             var refreshToken = tokenService.GenerateRefreshToken();
 
             utente.RefreshToken = refreshToken;
             utente.ScadenzaRefreshToken = DateTime.UtcNow.AddDays(
                 int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
             );
-            utente.UltimoLogin = DateTime.UtcNow;                              
+            utente.UltimoLogin = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
             Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddDays(
-                    int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
-                )
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(int.Parse(config["Jwt:RefreshTokenExpiresDays"]!))
             });
 
             return Ok(new { accessToken });

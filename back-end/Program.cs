@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using InfoGiovani_Back.Middleware;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IAuthorizationHandler, PermessoAuthorizationHandler>();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 
 builder.Services.AddAuthorization(options =>
 {
@@ -66,8 +74,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("LanPolicy", policy =>
     {
         policy
-            .WithOrigins("http://localhost:4200")
-            //.AllowAnyOrigin()
+            .WithOrigins(
+                "http://localhost:4200",
+                "https://radici.orientarti.it"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); //per permettere l'invio dei cookie, necessario per il refresh token
@@ -76,19 +86,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<TokenService>();
 
-//test da eliminare
-builder.Services.AddSingleton<CookieOptions>(sp =>
-{
-    var env = sp.GetRequiredService<IWebHostEnvironment>();
-    return new CookieOptions
-    {
-        HttpOnly = true,
-        Secure = !env.IsDevelopment(), // false in dev, true in prod
-        SameSite = SameSiteMode.None,
-    };
-});
-
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

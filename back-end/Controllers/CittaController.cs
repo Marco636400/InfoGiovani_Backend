@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
+using InfoGiovani_Back.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
@@ -49,6 +50,28 @@ namespace back_end.Controllers
             }
 
             return Ok(cittaFiltrate);
+        }
+        // GET: api/Citta/Dettaglio/5
+        [HttpGet("Dettaglio/{id}")]
+        public async Task<ActionResult<CittaConGerarchiaDTO>> GetCittaConGerarchia(int id)
+        {
+            var risultato = await _context.Citta
+                .Where(c => c.IdCitta == id)
+                .Select(c => new CittaConGerarchiaDTO
+                {
+                    IdCitta = c.IdCitta,
+                    NomeCitta = c.NomeCitta,
+                    IdProvincia = c.IdProvincia,
+                    NomeProvincia = c.Provincia != null ? c.Provincia.NomeProvincia : null,
+                    IdRegione = c.Provincia != null ? c.Provincia.IdRegione : (int?)null,
+                    NomeRegione = c.Provincia != null ? c.Provincia.Regione.NomeRegione : null
+                })
+                .FirstOrDefaultAsync();
+
+            if (risultato == null)
+                return NotFound();
+
+            return Ok(risultato);
         }
         private bool CittaExists(int id)
         {
