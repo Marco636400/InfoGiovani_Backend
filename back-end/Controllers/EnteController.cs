@@ -52,7 +52,6 @@ namespace back_end.Controllers
                 return NotFound();
             }
 
-            // Aggiorna le proprietà permesse
             enti.Nome = dto.Nome;
             enti.DescrizioneEnte = dto.DescrizioneEnte;
             enti.Telefono1 = dto.Telefono1;
@@ -63,7 +62,6 @@ namespace back_end.Controllers
             enti.Url = dto.Url;
             enti.Contatto = dto.Contatto;
             enti.IdCitta = dto.IdCitta;
-            // Campi di tracciamento per la modifica
             enti.IdUtenteModifica = dto.IdUtenteLoggato;
             enti.DataUltimaModifica = DateTime.Now;
 

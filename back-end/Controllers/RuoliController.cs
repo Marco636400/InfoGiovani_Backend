@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
-using Microsoft.AspNetCore.Authorization; 
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
 {
@@ -124,6 +124,10 @@ namespace back_end.Controllers
             {
                 return NotFound();
             }
+
+            bool haUtenti = await _context.Utenti.AnyAsync(u => u.IdRuolo == id);
+            if (haUtenti)
+                return BadRequest("Utenti hanno questo ruolo assegnato");
 
             _context.Ruoli.Remove(ruoli);
             await _context.SaveChangesAsync();
