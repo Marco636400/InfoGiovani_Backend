@@ -4,7 +4,7 @@ public class Categoria
 {
     public int IdCategoria { get;private set; }
     public int? IdParents { get; set; }
-    public string? Descrizione { get; set; }
+    public required string Descrizione { get; set; }
     public bool Disabilita { get; set; } = false;
     public bool IsPrivate { get; set; } = false;
 
