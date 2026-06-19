@@ -127,7 +127,7 @@ namespace back_end.Controllers
 
             bool haUtenti = await _context.Utenti.AnyAsync(u => u.IdRuolo == id);
             if (haUtenti)
-                return BadRequest("Utenti hanno questo ruolo assegnato");
+                return Conflict("Utenti hanno questo ruolo assegnato");
 
             _context.Ruoli.Remove(ruoli);
             await _context.SaveChangesAsync();

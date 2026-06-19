@@ -101,6 +101,11 @@ public class CategoriaController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaEModificaCategoriaDTO dto)
     {
+        if (dto.Descrizione == null || dto.Descrizione.Trim() == "")
+        {
+            return BadRequest("La descrizione è obbligatoria");
+        }
+
         var categoria = new Categoria
         {
             IdParents = dto.IdParents,
@@ -138,14 +143,14 @@ public class CategoriaController : ControllerBase
             .AnyAsync(cs => cs.IdCategoria == id);
         if (haSchedeCollegate)
         {
-            return BadRequest("Impossibile eliminare la categoria: sono presenti schede collegate");
+            return Conflict("Impossibile eliminare la categoria: sono presenti schede collegate");
         }
 
         bool haSottocategorie = await _context.Categorie
             .AnyAsync(c => c.IdParents == id);
         if (haSottocategorie)
         {
-            return BadRequest("Impossibile eliminare la categoria: sono presenti sottocategorie collegate");
+            return Conflict("Impossibile eliminare la categoria: sono presenti sottocategorie collegate");
         }
 
         _context.Categorie.Remove(categoria);
