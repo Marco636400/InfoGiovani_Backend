@@ -87,12 +87,11 @@ namespace back_end.Controllers
                 return Conflict(new { error = "Username già in uso" });
             }
 
+            // Aggiorna le proprietà permesse
             utente.Nome = dto.Nome ?? utente.Nome;
             utente.Cognome = dto.Cognome;
-            if (!string.IsNullOrWhiteSpace(dto.Username))
-                utente.Username = dto.Username;
-            if (!string.IsNullOrWhiteSpace(dto.Password))
-                utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            utente.Username = dto.Username;
+            utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             utente.IdRuolo = dto.IdRuolo;
             utente.Disabilita = dto.Disabilita;
 
@@ -143,18 +142,20 @@ namespace back_end.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUtente(int id, int idUtenteLoggato)//sostituire idutenteloggato con utente loggato jwt
         {
-            //l'utente non può autoeliminarsi
+            // 1. CONTROLLO CRUCIALE: L'utente non può auto-eliminarsi
             if (id == idUtenteLoggato)
             {
-                return BadRequest("non puoi eliminare il tuo stesso account.");
+                return BadRequest("Operazione non consentita: non puoi eliminare il tuo stesso account.");
             }
 
+            // 2. Cerchiamo l'utente nel database
             var utente = await _context.Utenti.FindAsync(id);
             if (utente == null)
             {
-                return NotFound($"Utente non trovato.");
+                return NotFound($"Utente con ID {id} non trovato.");
             }
 
+            // 3. Se supera i controlli, procediamo con l'eliminazione
             _context.Utenti.Remove(utente);
             await _context.SaveChangesAsync();
 
