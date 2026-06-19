@@ -144,7 +144,7 @@ namespace back_end.Controllers
             bool haSchedeCollegate = await _context.Schede.AnyAsync(s => s.IdEnte == id);
             if (haSchedeCollegate)
             {
-                return BadRequest("Impossibile eliminare l'ente: sono presenti schede collegate");
+                return Conflict("Impossibile eliminare l'ente: sono presenti schede collegate");
             }
 
             _context.Enti.Remove(ente);

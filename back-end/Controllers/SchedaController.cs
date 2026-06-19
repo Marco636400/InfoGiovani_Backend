@@ -54,7 +54,7 @@ namespace back_end.Controllers
             // 2. CONTROLLO (Opzionale): Lunghezza massima del titolo (es. massimo 100 caratteri)
             if (dto.Titolo.Length > 100)
             {
-                return BadRequest("Il titolo non può superare i 100 caratteri.");
+                return Conflict("Il titolo non può superare i 100 caratteri.");
             }
 
             // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
@@ -63,7 +63,7 @@ namespace back_end.Controllers
 
             if (titoloGiaEsistente)
             {
-                return BadRequest($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
+                return Conflict($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
             }
             var schede = await _context.Schede.FindAsync(id);
             if (schede == null)
@@ -118,7 +118,7 @@ namespace back_end.Controllers
             // 2. CONTROLLO (Opzionale): Lunghezza massima del titolo (es. massimo 100 caratteri)
             if (dto.Titolo.Length > 100)
             {
-                return BadRequest("Il titolo non può superare i 100 caratteri.");
+                return Conflict("Il titolo non può superare i 100 caratteri.");
             }
 
             // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
@@ -127,7 +127,7 @@ namespace back_end.Controllers
 
             if (titoloGiaEsistente)
             {
-                return BadRequest($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
+                return Conflict($"Esiste già una scheda con il titolo '{dto.Titolo}'. Scegli un titolo diverso.");
             }
             // Creiamo l'oggetto di database. IdScheda e DataScadenza vengono gestiti in automatico (private set)
             var schede = new Scheda
