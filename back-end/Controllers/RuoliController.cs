@@ -25,23 +25,52 @@ namespace back_end.Controllers
 
         // GET: api/Ruoli
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ruoli>>> GetRuoli()
+        public async Task<ActionResult<IEnumerable<GetRuoliDTO>>> GetRuoli()
         {
-            return await _context.Ruoli.ToListAsync();
+            var ruoli = await _context.Ruoli
+                .Select(r => new GetRuoliDTO
+                {
+                    IdRuolo = r.IdRuolo,
+                    NomeRuolo = r.NomeRuolo,
+                    CanCreateUser = r.CanCreateUser,
+                    CanCreateEntity = r.CanCreateEntity,
+                    CanViewCard = r.CanViewCard,
+                    IdUtenteCreazione = r.IdUtenteCreazione,
+                    DataCreazione = r.DataCreazione,
+                    IdUtenteModifica = r.IdUtenteModifica,
+                    DataUltimaModifica = r.DataUltimaModifica
+                })
+                .ToListAsync();
+
+            return Ok(ruoli);
         }
 
         // GET: api/Ruoli/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ruoli>> GetRuoli(int id)
+        public async Task<ActionResult<GetRuoliDTO>> GetRuoli(int id)
         {
-            var ruoli = await _context.Ruoli.FindAsync(id);
+            var ruoli = _context.Ruoli
+            .Where(r => r.IdRuolo == id)
+            .Select(r => new GetRuoliDTO
+            {
+                IdRuolo = r.IdRuolo,
+                NomeRuolo = r.NomeRuolo,
+                CanCreateUser = r.CanCreateUser,
+                CanCreateEntity = r.CanCreateEntity,
+                CanViewCard = r.CanViewCard,
+                IdUtenteCreazione = r.IdUtenteCreazione,
+                DataCreazione = r.DataCreazione,
+                IdUtenteModifica = r.IdUtenteModifica,
+                DataUltimaModifica = r.DataUltimaModifica
+            })
+            .FirstOrDefault();
 
             if (ruoli == null)
             {
                 return NotFound();
             }
 
-            return ruoli;
+            return Ok(ruoli);
         }
 
         // PUT: api/Ruoli/5

@@ -110,12 +110,12 @@ namespace back_end.Controllers
 
         // PUT: api/Utente/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUtente(ModificaUtenteDTO dto)
+        public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
-            var utente = await _context.Utenti.FindAsync(identita.IdUtente);
+            var utente = await _context.Utenti.FindAsync(id);
             if (utente == null)
             {
                 return NotFound();
@@ -123,7 +123,7 @@ namespace back_end.Controllers
 
             // Controllo univocità username, escludendo l'utente stesso
             bool usernameInUso = await _context.Utenti
-                .AnyAsync(u => u.Username == dto.Username && u.IdUtente != identita.IdUtente);
+                .AnyAsync(u => u.Username == dto.Username && u.IdUtente != id);
             if (usernameInUso)
             {
                 return Conflict(new { error = "Username già in uso" });

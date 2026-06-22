@@ -25,23 +25,64 @@ namespace back_end.Controllers
 
         // GET: api/Ente
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ente>>> GetEnti()
+        public async Task<ActionResult<IEnumerable<GetEnteDTO>>> GetEnti()
         {
-            return Ok(await _context.Enti.ToListAsync());
+            var enti = await _context.Enti
+                .Select(r => new GetEnteDTO
+                {
+                    IdEnte = r.IdEnte,
+                    Nome = r.Nome,
+                    DescrizioneEnte = r.DescrizioneEnte,
+                    IdCitta = r.IdCitta,
+                    Telefono1 = r.Telefono1,
+                    Telefono2 = r.Telefono2,
+                    Fax = r.Fax,
+                    Email = r.Email,
+                    Indirizzo = r.Indirizzo,
+                    Url = r.Url,
+                    Contatto = r.Contatto,
+                    IdUtenteCreazione = r.IdUtenteCreazione,
+                    DataCreazione = r.DataCreazione,
+                    IdUtenteModifica = r.IdUtenteModifica,
+                    DataUltimaModifica = r.DataUltimaModifica
+                })
+                .ToListAsync();
+
+            return Ok(enti);
         }
 
         // GET: api/Ente/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ente>> GetEnte(int id)
+        public async Task<ActionResult<GetEnteDTO>> GetEnte(int id)
         {
-            var ente = await _context.Enti.FindAsync(id);
+            var ente = _context.Enti
+            .Where(r => r.IdEnte == id)
+            .Select(r => new GetEnteDTO
+            {
+                IdEnte = r.IdEnte,
+                Nome = r.Nome,
+                DescrizioneEnte = r.DescrizioneEnte,
+                IdCitta = r.IdCitta,
+                Telefono1 = r.Telefono1,
+                Telefono2 = r.Telefono2,
+                Fax = r.Fax,
+                Email = r.Email,
+                Indirizzo = r.Indirizzo,
+                Url = r.Url,
+                Contatto = r.Contatto,
+                IdUtenteCreazione = r.IdUtenteCreazione,
+                DataCreazione = r.DataCreazione,
+                IdUtenteModifica = r.IdUtenteModifica,
+                DataUltimaModifica = r.DataUltimaModifica
+            })
+            .FirstOrDefault();
 
             if (ente == null)
             {
                 return NotFound();
             }
 
-            return ente;
+            return Ok(ente);
         }
         // PUT: api/Ente/5
         [HttpPut("{id}")]

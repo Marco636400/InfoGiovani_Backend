@@ -58,7 +58,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Allegato/5/2
-        [HttpGet("{id} , {idScheda}")]
+        [HttpGet("{id},{idScheda}")]
         public async Task<IActionResult> GetAllegato(int id, int idScheda)
         {
             // Cerchiamo l'allegato che corrisponde a idAllegato e idScheda

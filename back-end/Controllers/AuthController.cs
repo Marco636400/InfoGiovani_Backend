@@ -85,9 +85,8 @@ namespace InfoGiovani_Back.Controllers
             Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                //Test in locale, in produzione va messo a true e SameSite a None
-                Secure = false,
-                SameSite = SameSiteMode.Lax,
+                Secure = true, 
+                SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(
                     int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
                 )
@@ -103,12 +102,12 @@ namespace InfoGiovani_Back.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            var username = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var idUtenteClaim = User.FindFirstValue("IdUtente");
 
-            if (username == null)
+            if (idUtenteClaim == null)
                 return Unauthorized(new { message = "Claim utente non trovato nel token" });
 
-            var utente = await db.Utenti.FirstOrDefaultAsync(u => u.Username == username);
+            var utente = await db.Utenti.FirstOrDefaultAsync(u => u.IdUtente == Convert.ToInt32(idUtenteClaim));
 
             if (utente == null)
                 return NotFound(new { message = "Utente non trovato" });
