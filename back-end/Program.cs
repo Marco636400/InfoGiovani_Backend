@@ -6,6 +6,7 @@ using InfoGiovani_Back.Middleware;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,4 +107,5 @@ app.UseAuthentication();
 app.UseIdentitaUtente();
 app.UseAuthorization();
 app.MapControllers();
+
 app.Run();

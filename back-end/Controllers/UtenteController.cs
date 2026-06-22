@@ -68,7 +68,7 @@ namespace back_end.Controllers
 
         // GET: api/Utente/5
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetUtente()
+        public async Task<ActionResult> GetUtente(int id)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
@@ -83,7 +83,7 @@ namespace back_end.Controllers
 
 
             var utente = await query
-                .Where(u => u.IdUtente == identita.IdUtente)
+                .Where(u => u.IdUtente == id)
                 .Select(u => new
                 {
                     IdUtente = u.IdUtente,
@@ -137,18 +137,17 @@ namespace back_end.Controllers
                 utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             utente.IdRuolo = dto.IdRuolo;
             utente.Disabilita = dto.Disabilita;
-
+            utente.IdUtenteModifica = identita.IdUtente;
             utente.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(utente).State = EntityState.Modified;
-
             try
             {
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UtenteExists(identita.IdUtente))
+                if (!UtenteExists(id))
                 {
                     return NotFound();
                 }
@@ -182,7 +181,7 @@ namespace back_end.Controllers
             _context.Utenti.Add(utente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUtente", new { id = utente.IdUtente }, utente);
+            return CreatedAtAction("GetUtente", new { id = utente.IdUtente });
         }
         // DELETE: api/Utente/5
         [HttpDelete("{id}")]
