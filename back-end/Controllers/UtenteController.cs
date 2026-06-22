@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.Middleware;
 
 namespace back_end.Controllers
 {
@@ -24,27 +25,37 @@ namespace back_end.Controllers
 
         // GET: api/Utente
         [HttpGet]
-        public async Task<IActionResult> GetUtenti(int idUtenteLoggato)
+        public async Task<IActionResult> GetUtenti()
         {
-            // Prendiamo tutti gli utenti DAL DATABASE TRANNE quello loggato
-            var utentiFiltrati = await _context.Utenti
-                .Where(u => u.IdUtente != idUtenteLoggato)
-                .Select(u => new
-                {
-                    IdUtente = u.IdUtente,
-                    Nome = u.Nome,
-                    Cognome = u.Cognome,
-                    Username = u.Username,
-                    Disabilita = u.Disabilita,
-                    IdRuolo = u.IdRuolo,
-                    IdUtenteCreazione = u.IdUtenteCreazione,
-                    DataCreazione = u.DataCreazione,
-                    IdUtenteModifica = u.IdUtenteModifica,
-                    DataUltimaModifica = u.DataUltimaModifica,
-                    UltimoLogin = u.UltimoLogin,
-                    NomeUtente = u.NomeUtente
-                })
-                .ToListAsync();
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
+
+            var query = _context.Utenti.AsQueryable();
+
+            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+            if (!puoVedereDisabilitate)
+                query = query.Where(s => !s.Disabilita);
+
+            var utentiFiltrati = await query
+                            .Where(u => u.IdUtente != identita.IdUtente)
+                            .Select(u => new
+                            {
+                                IdUtente = u.IdUtente,
+                                Nome = u.Nome,
+                                Cognome = u.Cognome,
+                                Username = u.Username,
+                                Disabilita = u.Disabilita,
+                                IdRuolo = u.IdRuolo,
+                                IdUtenteCreazione = u.IdUtenteCreazione,
+                                DataCreazione = u.DataCreazione,
+                                IdUtenteModifica = u.IdUtenteModifica,
+                                DataUltimaModifica = u.DataUltimaModifica,
+                                UltimoLogin = u.UltimoLogin,
+                                NomeUtente = u.NomeUtente
+                            })
+                            .ToListAsync();
 
             // Se la lista è vuota (ovvero non ci sono ALTRI utenti registrati), restituisce NotFound
             if (!utentiFiltrati.Any())
@@ -57,10 +68,22 @@ namespace back_end.Controllers
 
         // GET: api/Utente/5
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetUtente(int id)
+        public async Task<ActionResult> GetUtente()
         {
-            var utente = await _context.Utenti
-            .Where(u => u.IdUtente == id)
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
+
+            var query = _context.Utenti.AsQueryable();
+
+            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+            if (!puoVedereDisabilitate)
+                query = query.Where(s => !s.Disabilita);
+
+
+            var utente = await query
+                .Where(u => u.IdUtente == identita.IdUtente)
                 .Select(u => new
                 {
                     IdUtente = u.IdUtente,
@@ -87,9 +110,12 @@ namespace back_end.Controllers
 
         // PUT: api/Utente/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
+        public async Task<IActionResult> PutUtente(ModificaUtenteDTO dto)
         {
-            var utente = await _context.Utenti.FindAsync(id);
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
+            var utente = await _context.Utenti.FindAsync(identita.IdUtente);
             if (utente == null)
             {
                 return NotFound();
@@ -97,7 +123,7 @@ namespace back_end.Controllers
 
             // Controllo univocità username, escludendo l'utente stesso
             bool usernameInUso = await _context.Utenti
-                .AnyAsync(u => u.Username == dto.Username && u.IdUtente != id);
+                .AnyAsync(u => u.Username == dto.Username && u.IdUtente != identita.IdUtente);
             if (usernameInUso)
             {
                 return Conflict(new { error = "Username già in uso" });
@@ -122,7 +148,7 @@ namespace back_end.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UtenteExists(id))
+                if (!UtenteExists(identita.IdUtente))
                 {
                     return NotFound();
                 }
@@ -137,6 +163,9 @@ namespace back_end.Controllers
         [HttpPost]
         public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
                 return Conflict(new { error = "Username già in uso" });
 
@@ -147,7 +176,7 @@ namespace back_end.Controllers
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 IdRuolo = dto.IdRuolo,
-                IdUtenteCreazione = dto.IdUtenteLoggato
+                IdUtenteCreazione = identita.IdUtente
             };
 
             _context.Utenti.Add(utente);
@@ -157,10 +186,13 @@ namespace back_end.Controllers
         }
         // DELETE: api/Utente/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUtente(int id, int idUtenteLoggato)//sostituire idutenteloggato con utente loggato jwt
+        public async Task<IActionResult> DeleteUtente(int id)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             //l'utente non può autoeliminarsi
-            if (id == idUtenteLoggato)
+            if (id == identita.IdUtente)
             {
                 return BadRequest("non puoi eliminare il tuo stesso account.");
             }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
+using InfoGiovani_Back.Middleware;
 
 
 namespace back_end.Controllers
@@ -46,6 +47,9 @@ namespace back_end.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             var enti = await _context.Enti.FindAsync(id);
             if (enti == null)
             {
@@ -62,7 +66,7 @@ namespace back_end.Controllers
             enti.Url = dto.Url;
             enti.Contatto = dto.Contatto;
             enti.IdCitta = dto.IdCitta;
-            enti.IdUtenteModifica = dto.IdUtenteLoggato;
+            enti.IdUtenteModifica = identita.IdUtente;
             enti.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(enti).State = EntityState.Modified;
@@ -90,7 +94,9 @@ namespace back_end.Controllers
         [HttpPost]
         public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
         {
-            // Creiamo l'oggetto di database.
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             var ente = new Ente
             {
                 Nome = dto.Nome,
@@ -102,7 +108,7 @@ namespace back_end.Controllers
                 Indirizzo = dto.Indirizzo,
                 Url = dto.Url,
                 Contatto = dto.Contatto,
-                IdUtenteCreazione = dto.IdUtenteLoggato,
+                IdUtenteCreazione = identita.IdUtente,
                 IdCitta = dto.IdCitta
             };
 
@@ -121,7 +127,6 @@ namespace back_end.Controllers
                 Indirizzo = ente.Indirizzo,
                 Url = ente.Url,
                 Contatto = ente.Contatto,
-                IdUtenteLoggato = ente.IdUtenteCreazione,
                 IdCitta = ente.IdCitta
             };
 

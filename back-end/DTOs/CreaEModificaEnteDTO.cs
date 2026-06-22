@@ -12,7 +12,6 @@ public class CreaEModificaEnteDTO
     public string? Indirizzo { get; set; }
     public string? Url { get; set; }
     public string? Contatto { get; set; }
-    public int IdUtenteLoggato { get; set; }
     // Navigation
     public int? IdCitta { get; set; }
 }

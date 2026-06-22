@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
 using InfoGiovani_Back.DTOs;
+using InfoGiovani_Back.Middleware;
 [Route("api/[controller]")]
 [ApiController]
 public class CategoriaController : ControllerBase
@@ -23,25 +24,52 @@ public class CategoriaController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<GetCategoriaDTO>>> GetCategorie()
     {
-        var categorie = await _context.Categorie
-            .Select(c => new GetCategoriaDTO
-            {
-                IdCategoria = c.IdCategoria,
-                IdParents = c.IdParents,
-                Descrizione = c.Descrizione,
-                Disabilita = c.Disabilita,
-                IsPrivate = c.IsPrivate
-            })
-            .ToListAsync();
+        var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
 
-        return Ok(categorie);
+        var query = _context.Categorie.AsQueryable();
+
+        bool puoVederePrivate = identita?.CanViewCard ?? false;
+        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+        if (!puoVederePrivate)
+            query = query.Where(s => !s.IsPrivate);
+
+        if (!puoVedereDisabilitate)
+            query = query.Where(s => !s.Disabilita);
+
+        var risultato = await query
+        .Select(c => new GetCategoriaDTO
+        {
+            IdCategoria = c.IdCategoria,
+            IdParents = c.IdParents,
+            Descrizione = c.Descrizione,
+            Disabilita = c.Disabilita,
+            IsPrivate = c.IsPrivate
+        })
+        .ToListAsync();
+
+        return Ok(risultato);
     }
 
     // GET: api/Categoria/5
     [HttpGet("{id}")]
     public async Task<ActionResult<GetCategoriaDTO>> GetCategoria(int id)
     {
-        var categoria = await _context.Categorie
+        var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+
+        var query = _context.Categorie.AsQueryable();
+
+        bool puoVederePrivate = identita?.CanViewCard ?? false;
+        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+        if (!puoVederePrivate)
+            query = query.Where(s => !s.IsPrivate);
+
+        if (!puoVedereDisabilitate)
+            query = query.Where(s => !s.Disabilita);
+
+
+        var categoria = await query
             .Where(c => c.IdCategoria == id)
             .Select(c => new GetCategoriaDTO
             {

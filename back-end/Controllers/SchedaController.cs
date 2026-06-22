@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
+using InfoGiovani_Back.Middleware;
+
 
 namespace back_end.Controllers
 {
@@ -23,29 +25,95 @@ namespace back_end.Controllers
 
         // GET: api/Scheda
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Scheda>>> GetSchede()
+        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria, [FromQuery] int? idEnte, [FromQuery] string? testo)
         {
-            return await _context.Schede.ToListAsync();
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+
+            var query = _context.Schede.AsQueryable();
+
+            bool puoVederePrivate = identita?.CanViewCard ?? false;
+            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+            if (!puoVederePrivate)
+                query = query.Where(s => !s.IsPrivate);
+
+            if (!puoVedereDisabilitate)
+                query = query.Where(s => !s.Disabilita);
+
+            if (idCategoria.HasValue)
+                query = query.Where(s => s.CategorieSchede.Any(cs => cs.IdCategoria == idCategoria.Value));
+
+            if (idEnte.HasValue)
+                query = query.Where(s => s.IdEnte == idEnte.Value);
+
+            if (!string.IsNullOrWhiteSpace(testo))
+            {
+                var t = testo.Trim();
+                query = query.Where(s => s.Titolo.Contains(t) || (s.Descrizione != null && s.Descrizione.Contains(t)));
+            }
+
+            var risultato = await query
+                .Select(s => new SchedaDTO
+                {
+                    IdScheda = s.IdScheda,
+                    Titolo = s.Titolo,
+                    Descrizione = s.Descrizione,
+                    IdEnte = s.IdEnte,
+                    DataScadenza = s.DataScadenza,
+                    IsPrivate = s.IsPrivate,
+                    Disabilita = s.Disabilita
+                })
+                .ToListAsync();
+
+            return Ok(risultato);
         }
 
         // GET: api/Scheda/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Scheda>> GetScheda(int id)
+        public async Task<ActionResult<SchedaDTO>> GetScheda(int id)
         {
-            var scheda = await _context.Schede.FindAsync(id);
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
 
-            if (scheda == null)
+            var query = _context.Schede.AsQueryable();
+
+            bool puoVederePrivate = identita?.CanViewCard ?? false;
+            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+            if (!puoVederePrivate)
+                query = query.Where(s => !s.IsPrivate);
+
+            if (!puoVedereDisabilitate)
+                query = query.Where(s => !s.Disabilita);
+
+            var schedaDto = await query
+                .Where(s => s.IdScheda == id)
+                .Select(s => new SchedaDTO
+                {
+                    IdScheda = s.IdScheda,
+                    Titolo = s.Titolo,
+                    Descrizione = s.Descrizione,
+                    IdEnte = s.IdEnte,
+                    DataScadenza = s.DataScadenza,
+                    IsPrivate = s.IsPrivate,
+                    Disabilita = s.Disabilita
+                })
+                .FirstOrDefaultAsync();
+
+            if (schedaDto == null)
             {
                 return NotFound();
             }
 
-            return scheda;
+            return Ok(schedaDto);
         }
 
         // PUT: api/Scheda/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             if (string.IsNullOrWhiteSpace(dto.Titolo))
             {
                 return BadRequest("Il titolo è obbligatorio e non può essere vuoto.");
@@ -59,7 +127,7 @@ namespace back_end.Controllers
 
             // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
             bool titoloGiaEsistente = await _context.Schede
-                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim()&& s.IdScheda != id);
+                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim() && s.IdScheda != id);
 
             if (titoloGiaEsistente)
             {
@@ -80,9 +148,7 @@ namespace back_end.Controllers
             schede.DataScadenza = dto.DataScadenza;
             schede.IsPrivate = dto.IsPrivate;
             schede.Disabilita = dto.Disabilita;
-
-            // Campi di tracciamento per la modifica
-            schede.IdUtenteModifica = dto.IdUtenteLoggato;
+            schede.IdUtenteModifica = identita.IdUtente;
             schede.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(schede).State = EntityState.Modified;
@@ -110,6 +176,9 @@ namespace back_end.Controllers
         [HttpPost]
         public async Task<ActionResult<CreaEModificaSchedaDTO>> PostScheda(CreaEModificaSchedaDTO dto)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");
             if (string.IsNullOrWhiteSpace(dto.Titolo))
             {
                 return BadRequest("Il titolo è obbligatorio e non può essere vuoto.");
@@ -137,7 +206,7 @@ namespace back_end.Controllers
                 Titolo = dto.Titolo,
                 Descrizione = dto.Descrizione,
                 IdEnte = dto.IdEnte, // Valorizzato dall'utente che invia la richiesta
-                IdUtenteCreazione = dto.IdUtenteLoggato,
+                IdUtenteCreazione = identita.IdUtente,
                 DataScadenza = dto.DataScadenza,
                 IsPrivate = dto.IsPrivate,
                 Disabilita = dto.Disabilita

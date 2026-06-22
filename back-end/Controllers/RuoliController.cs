@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.Middleware;
 
 namespace back_end.Controllers
 {
@@ -48,11 +49,14 @@ namespace back_end.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRuoli(int id, CreaEModificaRuoliDTO dto)
         {
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             var ruoli = await _context.Ruoli.FindAsync(id);
             if (ruoli == null)
             {
                 return NotFound();
             }
+            if (identita == null)
+                return BadRequest("Utente non trovato");
 
             // Aggiorna le proprietà permesse
             ruoli.NomeRuolo = dto.NomeRuolo;
@@ -61,7 +65,7 @@ namespace back_end.Controllers
             ruoli.CanViewCard = dto.CanViewCard;
 
             // Campi di tracciamento per la modifica
-            ruoli.IdUtenteModifica = dto.IdUtenteLoggato;
+            ruoli.IdUtenteModifica = identita.IdUtente;
             ruoli.DataUltimaModifica = DateTime.Now;
 
             _context.Entry(ruoli).State = EntityState.Modified;
@@ -90,14 +94,16 @@ namespace back_end.Controllers
         [HttpPost]
         public async Task<ActionResult<CreaEModificaRuoliDTO>> PostRuoli(CreaEModificaRuoliDTO dto)
         {
-            // Creiamo l'oggetto di database. IdRuolo e DataCreazione vengono gestiti in automatico (private set)
+            var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+            if (identita == null)
+                return BadRequest("Utente non trovato");            // Creiamo l'oggetto di database. IdRuolo e DataCreazione vengono gestiti in automatico (private set)
             var ruoli = new Ruoli
             {
                 NomeRuolo = dto.NomeRuolo,
                 CanCreateUser = dto.CanCreateUser,
                 CanCreateEntity = dto.CanCreateEntity,
                 CanViewCard = dto.CanViewCard,
-                IdUtenteCreazione = dto.IdUtenteLoggato // Valorizzato dall'utente che invia la richiesta
+                IdUtenteCreazione = identita.IdUtente // Valorizzato dall'utente che invia la richiesta
             };
 
             _context.Ruoli.Add(ruoli);
