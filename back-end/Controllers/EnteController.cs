@@ -75,7 +75,7 @@ namespace back_end.Controllers
                 IdUtenteModifica = r.IdUtenteModifica,
                 DataUltimaModifica = r.DataUltimaModifica
             })
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
 
             if (ente == null)
             {

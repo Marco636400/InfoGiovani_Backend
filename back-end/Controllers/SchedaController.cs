@@ -165,7 +165,22 @@ namespace back_end.Controllers
             schede.IdUtenteModifica = identita.IdUtente;
             schede.DataUltimaModifica = DateTime.Now;
 
-            _context.Entry(schede).State = EntityState.Modified;
+
+            var esistenti = await _context.CategorieSchede
+                .Where(x => x.IdScheda == id)
+                .ToListAsync();
+
+            _context.CategorieSchede.RemoveRange(esistenti);
+
+            var nuove = (dto.CategorieSchede ?? [])
+
+                            .Select(idCat => new CategoriaScheda
+                            {
+                                IdScheda = id,
+                                IdCategoria = idCat
+                            });
+
+            _context.CategorieSchede.AddRange(nuove);
 
             try
             {
@@ -206,7 +221,7 @@ namespace back_end.Controllers
 
             // 3. CONTROLLO: Verifica se esiste già una scheda con lo stesso titolo nel Database
             bool titoloGiaEsistente = await _context.Schede
-                .AnyAsync(s => s.Titolo.ToLower() == dto.Titolo.ToLower().Trim());
+                .AnyAsync(s => s.Titolo.ToLower().Trim() == dto.Titolo.ToLower().Trim());
 
             if (titoloGiaEsistente)
             {
@@ -227,7 +242,20 @@ namespace back_end.Controllers
             };
 
             _context.Schede.Add(schede);
-            await _context.SaveChangesAsync();
+
+            if (dto.CategorieSchede?.Any() == true)
+            {
+                var categorie = dto.CategorieSchede
+                    .Distinct()
+                    .Select(id => new CategoriaScheda
+                    {
+                        IdScheda = schede.IdScheda,
+                        IdCategoria = id
+                    });
+
+                _context.CategorieSchede.AddRange(categorie);
+                await _context.SaveChangesAsync();
+            }
 
             // Mappiamo l'oggetto appena creato nel DTO di risposta
             var ruoloDto = new CreaEModificaSchedaDTO
