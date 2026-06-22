@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace InfoGiovani_Back.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext db;

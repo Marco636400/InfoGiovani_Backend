@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class CittaController : ControllerBase
     {

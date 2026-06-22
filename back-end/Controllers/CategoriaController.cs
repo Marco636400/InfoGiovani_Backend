@@ -9,7 +9,7 @@ using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
-[Route("api/[controller]")]
+[Route("[controller]")]
 [ApiController]
 public class CategoriaController : ControllerBase
 {
@@ -90,6 +90,7 @@ public class CategoriaController : ControllerBase
     }
 
     // PUT: api/Categoria/5
+        [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCategoria(int id, CreaEModificaCategoriaDTO dto)
     {
@@ -126,6 +127,7 @@ public class CategoriaController : ControllerBase
     }
 
     // POST: api/Categoria
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaEModificaCategoriaDTO dto)
     {
@@ -158,6 +160,7 @@ public class CategoriaController : ControllerBase
     }
 
     // DELETE: api/Categoria/5 — logica esistente invariata
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategoria(int id)
     {

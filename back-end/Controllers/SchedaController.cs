@@ -8,11 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace back_end.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class SchedaController : ControllerBase
     {
@@ -122,6 +123,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Scheda/5
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
         {
@@ -202,6 +204,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Scheda
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaSchedaDTO>> PostScheda(CreaEModificaSchedaDTO dto)
         {
@@ -274,6 +277,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Scheda/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteScheda(int id)
         {

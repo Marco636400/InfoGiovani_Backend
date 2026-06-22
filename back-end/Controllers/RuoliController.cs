@@ -12,7 +12,7 @@ using InfoGiovani_Back.Middleware;
 
 namespace back_end.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class RuoliController : ControllerBase
     {
@@ -23,7 +23,8 @@ namespace back_end.Controllers
             _context = context;
         }
 
-        // GET: api/Ruoli
+        // GET: api/Ruoli        
+        [Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetRuoliDTO>>> GetRuoli()
         {
@@ -46,6 +47,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Ruoli/5
+        [Authorize(Policy = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult<GetRuoliDTO>> GetRuoli(int id)
         {
@@ -74,7 +76,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Ruoli/5
-        //[Authorize(Policy = "CanCreateUser")]
+        [Authorize(Policy = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRuoli(int id, CreaEModificaRuoliDTO dto)
         {
@@ -119,7 +121,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ruoli
-        //[Authorize(Policy = "CanCreateUser")]
+        [Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaRuoliDTO>> PostRuoli(CreaEModificaRuoliDTO dto)
         {
@@ -151,6 +153,7 @@ namespace back_end.Controllers
         }
 
         // DELETE: api/Ruoli/5
+        [Authorize(Policy = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRuoli(int id)
         {

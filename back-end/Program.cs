@@ -52,13 +52,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("CanCreateUser", policy =>
+    options.AddPolicy("Admin", policy =>
         policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanCreateUser))));
 
-    options.AddPolicy("CanCreateEntity", policy =>
+    options.AddPolicy("Entity", policy =>
         policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanCreateEntity))));
 
-    options.AddPolicy("CanViewCard", policy =>
+    options.AddPolicy("Private", policy =>
         policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanViewCard))));
 });
 
