@@ -56,12 +56,19 @@ namespace back_end.Controllers
                 .Select(s => new SchedaDTO
                 {
                     IdScheda = s.IdScheda,
+                    CodAlfabetico = s.CodAlfabetico,
+                    CodNumerico = s.CodNumerico,
                     Titolo = s.Titolo,
                     Descrizione = s.Descrizione,
                     IdEnte = s.IdEnte,
                     DataScadenza = s.DataScadenza,
                     IsPrivate = s.IsPrivate,
-                    Disabilita = s.Disabilita
+                    Disabilita = s.Disabilita,
+                    Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                    {
+                        IdCategoria = cs.IdCategoria,
+                        Descrizione = cs.Categoria.Descrizione
+                    }).ToList()
                 })
                 .ToListAsync();
 
@@ -90,12 +97,19 @@ namespace back_end.Controllers
                 .Select(s => new SchedaDTO
                 {
                     IdScheda = s.IdScheda,
+                    CodAlfabetico = s.CodAlfabetico,
+                    CodNumerico = s.CodNumerico,
                     Titolo = s.Titolo,
                     Descrizione = s.Descrizione,
                     IdEnte = s.IdEnte,
                     DataScadenza = s.DataScadenza,
                     IsPrivate = s.IsPrivate,
-                    Disabilita = s.Disabilita
+                    Disabilita = s.Disabilita,
+                    Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                    {
+                        IdCategoria = cs.IdCategoria,
+                        Descrizione = cs.Categoria.Descrizione
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync();
 

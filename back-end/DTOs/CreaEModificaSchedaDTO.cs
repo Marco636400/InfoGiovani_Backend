@@ -11,5 +11,5 @@ public class CreaEModificaSchedaDTO
     public DateTime? DataScadenza { get; set; }
     public bool IsPrivate { get; set; } = false;
     public bool Disabilita { get; set; } = false;
-    public ICollection<CategoriaScheda> CategorieSchede { get; set; } = [];
+    public ICollection<int> CategorieSchede { get; set; } = [];
 }

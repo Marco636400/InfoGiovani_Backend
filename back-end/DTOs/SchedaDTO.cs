@@ -12,5 +12,5 @@ public class SchedaDTO
     public DateTime? DataScadenza { get; set; }
     public bool IsPrivate { get; set; } = false;
     public bool Disabilita { get; set; } = false;
-    public ICollection<CategoriaScheda> CategorieSchede { get; set; } = [];
+    public ICollection<CategoriaSchedaInfoDTO> Categorie { get; set; } = [];
 }
