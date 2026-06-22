@@ -13,6 +13,7 @@ public class Scheda
     public string? Descrizione { get; set; }
     public int? IdEnte { get; set; }
     public DateTime? DataScadenza { get; set; }
+    public bool IsScaduto { get; set; } = false;
     public bool IsPrivate { get; set; } = false;
     public bool Disabilita { get; set; } = false;
 
