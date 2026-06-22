@@ -6,32 +6,23 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
-
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace back_end.Controllers
 
 {
 
-    [Route("api/[controller]")]
+    [Route("[controller]")]
 
     [ApiController]
-
     public class AllegatoController : ControllerBase
-
     {
-
         private readonly AppDbContext _context;
-
-
-
         public AllegatoController(AppDbContext context)
-
         {
             _context = context;
         }
-
-
 
         // GET: api/Allegato/5
         [HttpGet("{idScheda}")]
@@ -84,16 +75,13 @@ namespace back_end.Controllers
         // PUT: api/Allegato/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAllegato(int id, Allegato allegato)
         {
-
             if (id != allegato.IdAllegato)
-
             {
-
                 return BadRequest();
-
             }
 
             _context.Entry(allegato).State = EntityState.Modified;
@@ -117,6 +105,7 @@ namespace back_end.Controllers
         }
         // POST: api/Allegato
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Allegato>> PostAllegato(Allegato allegato)
         {
@@ -125,8 +114,9 @@ namespace back_end.Controllers
             return CreatedAtAction("GetAllegato", new { id = allegato.IdAllegato }, allegato);
         }
         // DELETE: api/Allegato/5
+        [Authorize]
         [HttpDelete("{id}")]
-       public async Task<IActionResult> DeleteAllegato(int id)
+        public async Task<IActionResult> DeleteAllegato(int id)
         {
             var allegato = await _context.Allegati.FindAsync(id);
             if (allegato == null)

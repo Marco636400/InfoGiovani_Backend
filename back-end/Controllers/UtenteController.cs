@@ -12,7 +12,7 @@ using InfoGiovani_Back.Middleware;
 
 namespace back_end.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class UtenteController : ControllerBase
     {
@@ -24,6 +24,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente
+        [Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetUtenti()
         {
@@ -67,6 +68,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente/5
+        [Authorize(Policy = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetUtente(int id)
         {
@@ -109,6 +111,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Utente/5
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {
@@ -159,6 +162,8 @@ namespace back_end.Controllers
 
             return NoContent();
         }
+        
+        [Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
@@ -184,6 +189,7 @@ namespace back_end.Controllers
             return CreatedAtAction("GetUtente", new { id = utente.IdUtente });
         }
         // DELETE: api/Utente/5
+        [Authorize(Policy = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUtente(int id)
         {

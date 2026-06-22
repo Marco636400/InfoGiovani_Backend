@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
-
+using Microsoft.AspNetCore.Authorization;
 
 namespace back_end.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class EnteController : ControllerBase
     {
@@ -85,6 +85,7 @@ namespace back_end.Controllers
             return Ok(ente);
         }
         // PUT: api/Ente/5
+        [Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
         {
@@ -132,6 +133,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ente
+        [Authorize(Policy = "Entity")]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
         {
@@ -177,6 +179,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Ente/5
+        [Authorize(Policy = "Entity")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnte(int id)
         {
