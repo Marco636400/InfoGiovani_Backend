@@ -55,27 +55,27 @@ namespace back_end.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GetEnteDTO>> GetEnte(int id)
         {
-            var ente = _context.Enti
-            .Where(r => r.IdEnte == id)
-            .Select(r => new GetEnteDTO
-            {
-                IdEnte = r.IdEnte,
-                Nome = r.Nome,
-                DescrizioneEnte = r.DescrizioneEnte,
-                IdCitta = r.IdCitta,
-                Telefono1 = r.Telefono1,
-                Telefono2 = r.Telefono2,
-                Fax = r.Fax,
-                Email = r.Email,
-                Indirizzo = r.Indirizzo,
-                Url = r.Url,
-                Contatto = r.Contatto,
-                IdUtenteCreazione = r.IdUtenteCreazione,
-                DataCreazione = r.DataCreazione,
-                IdUtenteModifica = r.IdUtenteModifica,
-                DataUltimaModifica = r.DataUltimaModifica
-            })
-            .FirstOrDefaultAsync();
+            var ente = await _context.Enti
+                .Where(r => r.IdEnte == id)
+                .Select(r => new GetEnteDTO
+                {
+                    IdEnte = r.IdEnte,
+                    Nome = r.Nome,
+                    DescrizioneEnte = r.DescrizioneEnte,
+                    IdCitta = r.IdCitta,
+                    Telefono1 = r.Telefono1,
+                    Telefono2 = r.Telefono2,
+                    Fax = r.Fax,
+                    Email = r.Email,
+                    Indirizzo = r.Indirizzo,
+                    Url = r.Url,
+                    Contatto = r.Contatto,
+                    IdUtenteCreazione = r.IdUtenteCreazione,
+                    DataCreazione = r.DataCreazione,
+                    IdUtenteModifica = r.IdUtenteModifica,
+                    DataUltimaModifica = r.DataUltimaModifica
+                })
+                .FirstOrDefaultAsync();
 
             if (ente == null)
             {
@@ -85,7 +85,7 @@ namespace back_end.Controllers
             return Ok(ente);
         }
         // PUT: api/Ente/5
-        [Authorize(Policy = "Entity")]
+        //[Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
         {
@@ -133,7 +133,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ente
-        [Authorize(Policy = "Entity")]
+        //[Authorize(Policy = "Entity")]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
         {
@@ -179,7 +179,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Ente/5
-        [Authorize(Policy = "Entity")]
+        //[Authorize(Policy = "Entity")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnte(int id)
         {

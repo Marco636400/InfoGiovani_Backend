@@ -2,7 +2,7 @@ namespace InfoGiovani_Back.Models;
 
 public class Ente
 {
-    public int IdEnte { get; set; }
+    public int IdEnte { get; private set; }
     public required string Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
     public int? IdCitta { get; set; }
