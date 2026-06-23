@@ -54,7 +54,9 @@ public class AppDbContext : DbContext
         {
             e.ToTable("categorieschede");
             e.HasKey(cs => cs.IdCategoriaScheda);
-            e.Property(cs => cs.IdCategoriaScheda).ValueGeneratedOnAdd();
+            e.Property(cs => cs.IdCategoriaScheda)
+                .HasColumnName("IdCategorieSchede")
+                .ValueGeneratedOnAdd();
 
             e.HasIndex(cs => new { cs.IdScheda, cs.IdCategoria }).IsUnique();
 
@@ -161,7 +163,6 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ── SCHEDA ──────────────────────────────────────────────
         modelBuilder.Entity<Scheda>(e =>
         {
             e.ToTable("scheda");
@@ -171,22 +172,27 @@ public class AppDbContext : DbContext
             e.Property(s => s.CodAlfabetico).HasMaxLength(50);
             e.Property(s => s.Titolo).HasMaxLength(200).IsRequired();
 
+            e.Property(s => s.IsScaduto)
+            .HasComputedColumnSql(
+                "(case when [DataScadenza] IS NOT NULL AND [DataScadenza]<CONVERT([date],getdate()) then CONVERT([bit],(1)) else CONVERT([bit],(0)) end)",
+                stored: false);
+
             e.HasOne(s => s.UtenteCreazione)
-             .WithMany()
-             .HasForeignKey(s => s.IdUtenteCreazione)
-             .HasConstraintName("FK_scheda_utente_creazione")
-             .OnDelete(DeleteBehavior.Restrict);
+            .WithMany()
+            .HasForeignKey(s => s.IdUtenteCreazione)
+            .HasConstraintName("FK_scheda_utente_creazione")
+            .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(s => s.UtenteModifica)
-             .WithMany()
-             .HasForeignKey(s => s.IdUtenteModifica)
-             .HasConstraintName("FK_scheda_utente_modifica")
-             .OnDelete(DeleteBehavior.Restrict);
+            .WithMany()
+            .HasForeignKey(s => s.IdUtenteModifica)
+            .HasConstraintName("FK_scheda_utente_modifica")
+            .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(s => s.Ente)
-             .WithMany(en => en.Schede)
-             .HasForeignKey(s => s.IdEnte)
-             .HasConstraintName("FK_scheda_ente");
+            .WithMany(en => en.Schede)
+            .HasForeignKey(s => s.IdEnte)
+            .HasConstraintName("FK_scheda_ente");
         });
 
         // ── UTENTE ──────────────────────────────────────────────

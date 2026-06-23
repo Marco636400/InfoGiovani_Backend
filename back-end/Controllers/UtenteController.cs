@@ -191,7 +191,7 @@ namespace back_end.Controllers
             _context.Utenti.Add(utente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUtente", new { id = utente.IdUtente });
+            return CreatedAtAction("GetUtente", new { id = utente.IdUtente }, utente);
         }
         // DELETE: api/Utente/5
         //[Authorize(Policy = "Admin")]
