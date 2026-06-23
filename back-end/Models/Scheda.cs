@@ -2,7 +2,7 @@ namespace InfoGiovani_Back.Models;
 
 public class Scheda
 {
-    public int IdScheda { get; set; }
+    public int IdScheda { get; private set; }
     public required int IdUtenteCreazione { get; set; }
     public DateTime DataCreazione { get;private set; } = DateTime.Now;
     public int? IdUtenteModifica { get; set; }

@@ -26,14 +26,9 @@ namespace back_end.Controllers
 
         // GET: api/Allegato/5
         [HttpGet("{idScheda}")]
-        public async Task<IActionResult> GetAllegati(int? idScheda)
+        public async Task<IActionResult> GetAllegati(int idScheda)
         {
             var query = _context.Allegati.AsQueryable();
-
-            if (idScheda.HasValue)
-            {
-                query = query.Where(a => a.IdScheda == idScheda.Value);
-            }
 
             var risultato = await query
                 .Select(a => new
@@ -75,7 +70,7 @@ namespace back_end.Controllers
         // PUT: api/Allegato/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 
-        [Authorize]
+        //[Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAllegato(int id, Allegato allegato)
         {
@@ -105,7 +100,7 @@ namespace back_end.Controllers
         }
         // POST: api/Allegato
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         public async Task<ActionResult<Allegato>> PostAllegato(Allegato allegato)
         {
@@ -114,7 +109,7 @@ namespace back_end.Controllers
             return CreatedAtAction("GetAllegato", new { id = allegato.IdAllegato }, allegato);
         }
         // DELETE: api/Allegato/5
-        [Authorize]
+        //[Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAllegato(int id)
         {

@@ -33,7 +33,7 @@ namespace InfoGiovani_Back.Controllers
                 .Include(u => u.Ruolo)
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-            if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password))
+            if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.Password) || utente.Disabilita)
                 return Unauthorized(new { error = "Credenziali non valide" });
 
             var accessToken = tokenService.GenerateAccessToken(utente);

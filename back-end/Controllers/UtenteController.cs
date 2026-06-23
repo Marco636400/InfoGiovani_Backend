@@ -24,7 +24,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente
-        [Authorize(Policy = "Admin")]
+        //[Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetUtenti()
         {
@@ -68,7 +68,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente/5
-        [Authorize(Policy = "Admin")]
+        //[Authorize(Policy = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetUtente(int id)
         {
@@ -111,7 +111,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Utente/5
-        [Authorize]
+        //[Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {
@@ -162,14 +162,19 @@ namespace back_end.Controllers
 
             return NoContent();
         }
-        
-        [Authorize(Policy = "Admin")]
+
+        //post
+        //[Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                return BadRequest("L'Username è obbligatorio e non può essere vuoto.");
+            }
             if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
                 return Conflict(new { error = "Username già in uso" });
 
@@ -189,7 +194,7 @@ namespace back_end.Controllers
             return CreatedAtAction("GetUtente", new { id = utente.IdUtente });
         }
         // DELETE: api/Utente/5
-        [Authorize(Policy = "Admin")]
+        //[Authorize(Policy = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUtente(int id)
         {

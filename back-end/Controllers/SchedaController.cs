@@ -123,7 +123,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Scheda/5
-        [Authorize]
+        //[Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
         {
@@ -204,7 +204,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Scheda
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaSchedaDTO>> PostScheda(CreaEModificaSchedaDTO dto)
         {
@@ -245,7 +245,7 @@ namespace back_end.Controllers
             };
 
             _context.Schede.Add(schede);
-
+            await _context.SaveChangesAsync();
             if (dto.CategorieSchede?.Any() == true)
             {
                 var categorie = dto.CategorieSchede
@@ -257,7 +257,6 @@ namespace back_end.Controllers
                     });
 
                 _context.CategorieSchede.AddRange(categorie);
-                await _context.SaveChangesAsync();
             }
 
             // Mappiamo l'oggetto appena creato nel DTO di risposta
@@ -277,7 +276,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Scheda/5
-        [Authorize]
+        //[Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteScheda(int id)
         {
