@@ -90,7 +90,7 @@ namespace back_end.Controllers
                 })
                 .Where(x => x.Punteggio.HasValue)
                 .OrderBy(x => x.Punteggio!.Value)
-                .ThenBy(x => x.Dto.Nome) 
+                .ThenBy(x => x.Dto.Nome)
                 .Select(x => x.Dto)
                 .ToList();
 
