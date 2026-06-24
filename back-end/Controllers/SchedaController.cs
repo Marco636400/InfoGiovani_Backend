@@ -26,8 +26,10 @@ namespace back_end.Controllers
 
         // GET: api/Scheda
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria, [FromQuery] int? idEnte, [FromQuery] string? testo)
+        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] int? idEnte = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
 
             var query = _context.Schede.AsQueryable();
@@ -53,7 +55,15 @@ namespace back_end.Controllers
                 query = query.Where(s => s.Titolo.Contains(t) || (s.Descrizione != null && s.Descrizione.Contains(t)));
             }
 
-            var risultato = await query
+            int totalRecords = await query.CountAsync();
+
+            // 2. Ordiniamo per data creazione
+            query = query.OrderByDescending(s => s.DataCreazione);
+
+            // 3. Applichiamo Skip e Take sulla query, poi usiamo il .Select per mappare nel DTO
+            var schedePaginateDto = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(s => new SchedaDTO
                 {
                     IdScheda = s.IdScheda,
@@ -69,9 +79,21 @@ namespace back_end.Controllers
                         Descrizione = cs.Categoria.Descrizione
                     }).ToList()
                 })
-                .ToListAsync();
+                .ToListAsync(); // Esegue la query combinata estraendo solo i DTO della pagina corrente
 
-            return Ok(risultato);
+            // 4. Calcolo del numero totale di pagine
+            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            var response = new PagedResponseDTO<SchedaDTO> // Nota il tipo SchedaDTO qui
+            {
+                CurrentPage = page,
+                PageSize = pageSize,
+                TotalRecords = totalRecords,
+                TotalPages = totalPages == 0 ? 1 : totalPages,
+                Schede = schedePaginateDto 
+            };
+
+            return Ok(response);
         }
 
         // GET: api/Scheda/5
