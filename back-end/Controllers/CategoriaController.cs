@@ -9,6 +9,7 @@ using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
+using InfoGiovani_Back.Services;
 [Route("[controller]")]
 [ApiController]
 public class CategoriaController : ControllerBase
@@ -20,9 +21,8 @@ public class CategoriaController : ControllerBase
         _context = context;
     }
 
-    // GET: api/Categoria
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GetCategoriaDTO>>> GetCategorie()
+    public async Task<ActionResult<IEnumerable<GetCategoriaDTO>>> GetCategorie([FromQuery] string? ricerca = null)
     {
         var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
 
@@ -37,18 +37,47 @@ public class CategoriaController : ControllerBase
         if (!puoVedereDisabilitate)
             query = query.Where(s => !s.Disabilita);
 
-        var risultato = await query
-        .Select(c => new GetCategoriaDTO
+        if (string.IsNullOrWhiteSpace(ricerca))
         {
-            IdCategoria = c.IdCategoria,
-            IdParents = c.IdParents,
-            Descrizione = c.Descrizione,
-            Disabilita = c.Disabilita,
-            IsPrivate = c.IsPrivate
-        })
-        .ToListAsync();
+            var risultato = await query
+                .Select(c => new GetCategoriaDTO
+                {
+                    IdCategoria = c.IdCategoria,
+                    IdParents = c.IdParents,
+                    Descrizione = c.Descrizione,
+                    Disabilita = c.Disabilita,
+                    IsPrivate = c.IsPrivate
+                })
+                .ToListAsync();
 
-        return Ok(risultato);
+            return Ok(risultato);
+        }
+
+        // Ricerca a 3 livelli sulla Descrizione (unico campo testuale disponibile per Categoria)
+        var candidati = await query
+            .Select(c => new GetCategoriaDTO
+            {
+                IdCategoria = c.IdCategoria,
+                IdParents = c.IdParents,
+                Descrizione = c.Descrizione,
+                Disabilita = c.Disabilita,
+                IsPrivate = c.IsPrivate
+            })
+            .ToListAsync();
+
+        var risultatiOrdinati = candidati
+            .Select(c => new
+            {
+                Dto = c,
+                Punteggio = RicercaTestualeService.CalcolaPunteggio(ricerca, c.Descrizione)
+            })
+            .Where(x => x.Punteggio.HasValue)
+            .OrderBy(x => x.Punteggio!.Value)
+            .ThenBy(x => x.Dto.Descrizione)
+            .Select(x => x.Dto)
+            .ToList();
+
+        return Ok(risultatiOrdinati);
     }
 
     // GET: api/Categoria/5
@@ -89,8 +118,7 @@ public class CategoriaController : ControllerBase
         return categoria;
     }
 
-    // PUT: api/Categoria/5
-    
+    // PUT: api/Categoria/5    
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCategoria(int id, CreaEModificaCategoriaDTO dto)
     {

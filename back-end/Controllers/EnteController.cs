@@ -9,6 +9,7 @@ using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
 using Microsoft.AspNetCore.Authorization;
+using InfoGiovani_Back.Services;
 
 namespace back_end.Controllers
 {
@@ -25,57 +26,102 @@ namespace back_end.Controllers
 
         // GET: api/Ente
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetEnteDTO>>> GetEnti()
+        public async Task<ActionResult<IEnumerable<GetEnteDTO>>> GetEnti([FromQuery] string? ricerca = null)
         {
-            var enti = await _context.Enti
-                .Select(r => new GetEnteDTO
+            var query = _context.Enti.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(ricerca))
+            {
+                var enti = await query
+                    .Select(r => new GetEnteDTO
+                    {
+                        IdEnte = r.IdEnte,
+                        Nome = r.Nome,
+                        DescrizioneEnte = r.DescrizioneEnte,
+                        IdCitta = r.IdCitta,
+                        Telefono1 = r.Telefono1,
+                        Telefono2 = r.Telefono2,
+                        Fax = r.Fax,
+                        Email = r.Email,
+                        Indirizzo = r.Indirizzo,
+                        Url = r.Url,
+                        Contatto = r.Contatto,
+                        IdUtenteCreazione = r.IdUtenteCreazione,
+                        DataCreazione = r.DataCreazione,
+                        IdUtenteModifica = r.IdUtenteModifica,
+                        DataUltimaModifica = r.DataUltimaModifica
+                    })
+                    .ToListAsync();
+
+                return Ok(enti);
+            }
+
+            //ricerca a 3 livelli su titolo, descrizione e luogo
+            var candidati = await query
+                .Select(r => new
                 {
-                    IdEnte = r.IdEnte,
-                    Nome = r.Nome,
-                    DescrizioneEnte = r.DescrizioneEnte,
-                    IdCitta = r.IdCitta,
-                    Telefono1 = r.Telefono1,
-                    Telefono2 = r.Telefono2,
-                    Fax = r.Fax,
-                    Email = r.Email,
-                    Indirizzo = r.Indirizzo,
-                    Url = r.Url,
-                    Contatto = r.Contatto,
-                    IdUtenteCreazione = r.IdUtenteCreazione,
-                    DataCreazione = r.DataCreazione,
-                    IdUtenteModifica = r.IdUtenteModifica,
-                    DataUltimaModifica = r.DataUltimaModifica
+                    Dto = new GetEnteDTO
+                    {
+                        IdEnte = r.IdEnte,
+                        Nome = r.Nome,
+                        DescrizioneEnte = r.DescrizioneEnte,
+                        IdCitta = r.IdCitta,
+                        Telefono1 = r.Telefono1,
+                        Telefono2 = r.Telefono2,
+                        Fax = r.Fax,
+                        Email = r.Email,
+                        Indirizzo = r.Indirizzo,
+                        Url = r.Url,
+                        Contatto = r.Contatto,
+                        IdUtenteCreazione = r.IdUtenteCreazione,
+                        DataCreazione = r.DataCreazione,
+                        IdUtenteModifica = r.IdUtenteModifica,
+                        DataUltimaModifica = r.DataUltimaModifica
+                    },
+                    NomeCitta = r.Citta != null ? r.Citta.NomeCitta : null
                 })
                 .ToListAsync();
 
-            return Ok(enti);
+            var risultati = candidati
+                .Select(c => new
+                {
+                    c.Dto,
+                    Punteggio = RicercaTestualeService.CalcolaPunteggio(ricerca, c.Dto.Nome, c.Dto.DescrizioneEnte, c.NomeCitta)
+                })
+                .Where(x => x.Punteggio.HasValue)
+                .OrderBy(x => x.Punteggio!.Value)
+                .ThenBy(x => x.Dto.Nome) 
+                .Select(x => x.Dto)
+                .ToList();
+
+            return Ok(risultati);
         }
 
         // GET: api/Ente/5
         [HttpGet("{id}")]
         public async Task<ActionResult<GetEnteDTO>> GetEnte(int id)
         {
-            var ente = await _context.Enti
-                .Where(r => r.IdEnte == id)
-                .Select(r => new GetEnteDTO
-                {
-                    IdEnte = r.IdEnte,
-                    Nome = r.Nome,
-                    DescrizioneEnte = r.DescrizioneEnte,
-                    IdCitta = r.IdCitta,
-                    Telefono1 = r.Telefono1,
-                    Telefono2 = r.Telefono2,
-                    Fax = r.Fax,
-                    Email = r.Email,
-                    Indirizzo = r.Indirizzo,
-                    Url = r.Url,
-                    Contatto = r.Contatto,
-                    IdUtenteCreazione = r.IdUtenteCreazione,
-                    DataCreazione = r.DataCreazione,
-                    IdUtenteModifica = r.IdUtenteModifica,
-                    DataUltimaModifica = r.DataUltimaModifica
-                })
-                .FirstOrDefaultAsync();
+            var ente = _context.Enti
+            .Where(r => r.IdEnte == id)
+            .Select(r => new GetEnteDTO
+            {
+                IdEnte = r.IdEnte,
+                Nome = r.Nome,
+                DescrizioneEnte = r.DescrizioneEnte,
+                IdCitta = r.IdCitta,
+                Telefono1 = r.Telefono1,
+                Telefono2 = r.Telefono2,
+                Fax = r.Fax,
+                Email = r.Email,
+                Indirizzo = r.Indirizzo,
+                Url = r.Url,
+                Contatto = r.Contatto,
+                IdUtenteCreazione = r.IdUtenteCreazione,
+                DataCreazione = r.DataCreazione,
+                IdUtenteModifica = r.IdUtenteModifica,
+                DataUltimaModifica = r.DataUltimaModifica
+            })
+            .FirstOrDefaultAsync();
 
             if (ente == null)
             {
