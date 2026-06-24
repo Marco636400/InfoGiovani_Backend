@@ -85,7 +85,7 @@ namespace back_end.Controllers
             return Ok(ente);
         }
         // PUT: api/Ente/5
-        //[Authorize(Policy = "Entity")]
+        [Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
         {
@@ -133,7 +133,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Ente
-        //[Authorize(Policy = "Entity")]
+        [Authorize(Policy = "Entity")]
         [HttpPost]
         public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
         {
@@ -179,7 +179,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Ente/5
-        //[Authorize(Policy = "Entity")]
+        [Authorize(Policy = "Entity")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEnte(int id)
         {
