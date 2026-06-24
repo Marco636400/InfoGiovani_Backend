@@ -9,7 +9,7 @@ using InfoGiovani_Back.Models;
 using InfoGiovani_Back.DTOs;
 using InfoGiovani_Back.Middleware;
 using Microsoft.AspNetCore.Authorization;
-
+using InfoGiovani_Back.Services;
 
 namespace back_end.Controllers
 {
@@ -26,16 +26,18 @@ namespace back_end.Controllers
 
         // GET: api/Scheda
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] int? idEnte = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] List<int>? idEnti = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            //controllo per valori < 0 
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
+
+            //verifica dll'identità di chi chiama e controllo dei ruoli
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
-
-            var query = _context.Schede.AsQueryable();
-
             bool puoVederePrivate = identita?.CanViewCard ?? false;
             bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+
+            var query = _context.Schede.AsQueryable();
 
             if (!puoVederePrivate)
                 query = query.Where(s => !s.IsPrivate);
@@ -46,51 +48,91 @@ namespace back_end.Controllers
             if (idCategoria.HasValue)
                 query = query.Where(s => s.CategorieSchede.Any(cs => cs.IdCategoria == idCategoria.Value));
 
-            if (idEnte.HasValue)
-                query = query.Where(s => s.IdEnte == idEnte.Value);
+            //la scheda deve appartenere ad almeno uno degli enti selezionati 
+            if (idEnti != null && idEnti.Count > 0)
+                query = query.Where(s => s.IdEnte.HasValue && idEnti.Contains(s.IdEnte.Value));
 
-            if (!string.IsNullOrWhiteSpace(testo))
+            int totalRecords;
+            int totalPages;
+            List<SchedaDTO> schedePaginateDto;
+
+            //se non c'è testo della barra di ricerca fa ordinamento e paginazione in SQL
+            if (string.IsNullOrWhiteSpace(testo))
             {
-                var t = testo.Trim();
-                query = query.Where(s => s.Titolo.Contains(t) || (s.Descrizione != null && s.Descrizione.Contains(t)));
-            }
+                totalRecords = await query.CountAsync();
 
-            int totalRecords = await query.CountAsync();
+                query = query.OrderByDescending(s => s.DataCreazione);
 
-            // 2. Ordiniamo per data creazione
-            query = query.OrderByDescending(s => s.DataCreazione);
-
-            // 3. Applichiamo Skip e Take sulla query, poi usiamo il .Select per mappare nel DTO
-            var schedePaginateDto = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(s => new SchedaDTO
-                {
-                    IdScheda = s.IdScheda,
-                    CodAlfabetico = s.CodAlfabetico,
-                    CodNumerico = s.CodNumerico,
-                    Titolo = s.Titolo,
-                    Descrizione = s.Descrizione,
-                    IdEnte = s.IdEnte,
-                    DataScadenza = s.DataScadenza,
-                    Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                schedePaginateDto = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(s => new SchedaDTO
                     {
-                        IdCategoria = cs.IdCategoria,
-                        Descrizione = cs.Categoria.Descrizione
-                    }).ToList()
-                })
-                .ToListAsync(); // Esegue la query combinata estraendo solo i DTO della pagina corrente
+                        IdScheda = s.IdScheda,
+                        CodAlfabetico = s.CodAlfabetico,
+                        CodNumerico = s.CodNumerico,
+                        Titolo = s.Titolo,
+                        Descrizione = s.Descrizione,
+                        IdEnte = s.IdEnte,
+                        DataScadenza = s.DataScadenza,
+                        Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                        {
+                            IdCategoria = cs.IdCategoria,
+                            Descrizione = cs.Categoria.Descrizione
+                        }).ToList()
+                    })
+                    .ToListAsync();
 
-            // 4. Calcolo del numero totale di pagine
-            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            }
+            else
+            {
+                //ricerca testuale a 3 livelli su titolo e descrizione, il ranking per tier richiede il calcolo in memoria, quindi materializziamo tutti i candidati (già filtrati per ente/categoria/visibilità) prima di ordinare e paginare.
+                var candidati = await query
+                    .Select(s => new SchedaDTO
+                    {
+                        IdScheda = s.IdScheda,
+                        CodAlfabetico = s.CodAlfabetico,
+                        CodNumerico = s.CodNumerico,
+                        Titolo = s.Titolo,
+                        Descrizione = s.Descrizione,
+                        IdEnte = s.IdEnte,
+                        DataScadenza = s.DataScadenza,
+                        Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                        {
+                            IdCategoria = cs.IdCategoria,
+                            Descrizione = cs.Categoria.Descrizione
+                        }).ToList()
+                    })
+                    .ToListAsync();
 
-            var response = new PagedResponseDTO<SchedaDTO> // Nota il tipo SchedaDTO qui
+                var risultatiOrdinati = candidati
+                    .Select(s => new
+                    {
+                        Dto = s,
+                        Punteggio = RicercaTestualeService.CalcolaPunteggio(testo, s.Titolo, s.Descrizione)
+                    })
+                    .Where(x => x.Punteggio.HasValue)
+                    .OrderBy(x => x.Punteggio!.Value)
+                    .ThenByDescending(x => x.Dto.IdScheda) // ASSUNZIONE: tie-break non specificato, vedi nota
+                    .Select(x => x.Dto)
+                    .ToList();
+
+                totalRecords = risultatiOrdinati.Count;
+
+                schedePaginateDto = risultatiOrdinati
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            var response = new PagedResponseDTO<SchedaDTO>
             {
                 CurrentPage = page,
                 PageSize = pageSize,
                 TotalRecords = totalRecords,
                 TotalPages = totalPages == 0 ? 1 : totalPages,
-                Schede = schedePaginateDto 
+                Schede = schedePaginateDto
             };
 
             return Ok(response);
