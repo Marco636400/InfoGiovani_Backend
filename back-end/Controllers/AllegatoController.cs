@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InfoGiovani_Back.Models;
 using Microsoft.AspNetCore.Authorization;
-
+using InfoGiovani_Back.DTOs;
 
 namespace back_end.Controllers
 
@@ -70,14 +70,19 @@ namespace back_end.Controllers
         // PUT: api/Allegato/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
 
-        //[Authorize]
+        [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAllegato(int id, Allegato allegato)
+        public async Task<IActionResult> PutAllegato(int id, CreaEModificaAllegatoDTO dto)
         {
-            if (id != allegato.IdAllegato)
+            var allegato = await _context.Allegati.FindAsync(id);
+            if (allegato == null)
             {
                 return BadRequest();
             }
+
+            allegato.IdScheda = dto.IdScheda;
+            allegato.Nome = dto.Nome;
+            allegato.Url = dto.Url;
 
             _context.Entry(allegato).State = EntityState.Modified;
 
@@ -100,16 +105,32 @@ namespace back_end.Controllers
         }
         // POST: api/Allegato
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[Authorize]
+        [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Allegato>> PostAllegato(Allegato allegato)
+        public async Task<ActionResult<CreaEModificaAllegatoDTO>> PostAllegato(CreaEModificaAllegatoDTO dto)
         {
+            if (string.IsNullOrEmpty(dto.Url))
+            {
+                return BadRequest("L'URL è obbligatorio");
+            }
+            if (string.IsNullOrEmpty(dto.Nome))
+            {
+                return BadRequest("Il nome è obbligatorio");
+            }
+
+            var allegato = new Allegato
+            {
+                IdScheda = dto.IdScheda,
+                Nome = dto.Nome,
+                Url = dto.Url
+            };
+
             _context.Allegati.Add(allegato);
             await _context.SaveChangesAsync();
-            return CreatedAtAction("GetAllegato", new { id = allegato.IdAllegato }, allegato);
+            return CreatedAtAction("GetAllegato", new { id = allegato.IdAllegato, idScheda = allegato.IdScheda }, allegato);
         }
         // DELETE: api/Allegato/5
-        //[Authorize]
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAllegato(int id)
         {

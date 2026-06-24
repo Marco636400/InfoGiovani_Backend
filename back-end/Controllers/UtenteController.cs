@@ -24,7 +24,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente
-        //[Authorize(Policy = "Admin")]
+        [Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetUtenti()
         {
@@ -68,7 +68,7 @@ namespace back_end.Controllers
         }
 
         // GET: api/Utente/5
-        //[Authorize(Policy = "Admin")]
+        [Authorize(Policy = "Admin")]
         [HttpGet("{id}")]
         public async Task<ActionResult> GetUtente(int id)
         {
@@ -111,7 +111,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Utente/5
-        //[Authorize]
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {
@@ -133,13 +133,16 @@ namespace back_end.Controllers
             }
 
             utente.Nome = dto.Nome ?? utente.Nome;
-            utente.Cognome = dto.Cognome;
+            if (!string.IsNullOrWhiteSpace(dto.Cognome))
+                utente.Cognome = dto.Cognome;
             if (!string.IsNullOrWhiteSpace(dto.Username))
                 utente.Username = dto.Username;
             if (!string.IsNullOrWhiteSpace(dto.Password))
                 utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            utente.IdRuolo = dto.IdRuolo;
-            utente.Disabilita = dto.Disabilita;
+            if (dto.IdRuolo != utente.IdRuolo && dto.IdRuolo != 0)
+                utente.IdRuolo = dto.IdRuolo;
+            if (dto.Disabilita != utente.Disabilita)
+                utente.Disabilita = dto.Disabilita;
             utente.IdUtenteModifica = identita.IdUtente;
             utente.DataUltimaModifica = DateTime.Now;
 
@@ -164,7 +167,7 @@ namespace back_end.Controllers
         }
 
         //post
-        //[Authorize(Policy = "Admin")]
+        [Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
         {
@@ -191,10 +194,10 @@ namespace back_end.Controllers
             _context.Utenti.Add(utente);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUtente", new { id = utente.IdUtente });
+            return CreatedAtAction("GetUtente", new { id = utente.IdUtente }, utente);
         }
         // DELETE: api/Utente/5
-        //[Authorize(Policy = "Admin")]
+        [Authorize(Policy = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUtente(int id)
         {
