@@ -101,7 +101,7 @@ namespace back_end.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<GetEnteDTO>> GetEnte(int id)
         {
-            var ente = _context.Enti
+            var ente = await _context.Enti
             .Where(r => r.IdEnte == id)
             .Select(r => new GetEnteDTO
             {
