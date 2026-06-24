@@ -6,6 +6,6 @@ namespace InfoGiovani_Back.DTOs
         public int TotalPages { get; set; }
         public int PageSize { get; set; }
         public int TotalRecords { get; set; }
-        public IEnumerable<T> Schede { get; set; }
+        public List<T> Schede { get; set; } = new List<T>();
     }
 }
