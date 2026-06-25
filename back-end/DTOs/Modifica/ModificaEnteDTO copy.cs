@@ -1,9 +1,9 @@
 using InfoGiovani_Back.Models;
 namespace InfoGiovani_Back.DTOs;
 
-public class CreaEModificaEnteDTO
+public class ModificaEnteDTO
 {
-    public required string Nome { get; set; }
+    public string? Nome { get; set; }
     public string? DescrizioneEnte { get; set; }
     public string? Telefono1 { get; set; }
     public string? Telefono2 { get; set; }

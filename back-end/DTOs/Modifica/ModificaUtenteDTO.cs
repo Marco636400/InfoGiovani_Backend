@@ -6,6 +6,6 @@ public class ModificaUtenteDTO
     public string? Cognome { get; set; }
     public string? Username { get; set; }
     public string? Password { get; set; }
-    public int IdRuolo { get; set; }
-    public bool Disabilita { get; set; }
+    public int? IdRuolo { get; set; }
+    public bool Disabilita { get; set; } = false;
 }

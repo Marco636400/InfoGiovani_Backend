@@ -69,10 +69,9 @@ namespace back_end.Controllers
 
         // PUT: api/Allegato/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAllegato(int id, CreaEModificaAllegatoDTO dto)
+        public async Task<IActionResult> PutAllegato(int id, ModificaAllegatoDTO dto)
         {
             var allegato = await _context.Allegati.FindAsync(id);
             if (allegato == null)
@@ -80,9 +79,12 @@ namespace back_end.Controllers
                 return BadRequest();
             }
 
-            allegato.IdScheda = dto.IdScheda;
-            allegato.Nome = dto.Nome;
-            allegato.Url = dto.Url;
+            if (dto.IdScheda != null)
+                allegato.IdScheda = (int)dto.IdScheda;
+            if (!string.IsNullOrEmpty(dto.Nome))
+                allegato.Nome = dto.Nome;
+            if (!string.IsNullOrEmpty(dto.Url))
+                allegato.Url = dto.Url;
 
             _context.Entry(allegato).State = EntityState.Modified;
 
@@ -107,7 +109,7 @@ namespace back_end.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult<CreaEModificaAllegatoDTO>> PostAllegato(CreaEModificaAllegatoDTO dto)
+        public async Task<ActionResult<CreaAllegatoDTO>> PostAllegato(CreaAllegatoDTO dto)
         {
             if (string.IsNullOrEmpty(dto.Url))
             {

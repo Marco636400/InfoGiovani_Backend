@@ -1,6 +1,6 @@
 namespace InfoGiovani_Back.DTOs;
 
-public class CreaEModificaAllegatoDTO
+public class CreaAllegatoDTO
 {
     public required int IdScheda { get; set; }
     public required string Nome { get; set; }

@@ -26,7 +26,7 @@ namespace back_end.Controllers
 
         // GET: api/Scheda
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] List<int>? idEnti = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<GetSchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] List<int>? idEnti = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             //controllo per valori < 0 
             if (page < 1) page = 1;
@@ -54,7 +54,7 @@ namespace back_end.Controllers
 
             int totalRecords;
             int totalPages;
-            List<SchedaDTO> schedePaginateDto;
+            List<GetSchedaDTO> schedePaginateDto;
 
             //se non c'è testo della barra di ricerca fa ordinamento e paginazione in SQL
             if (string.IsNullOrWhiteSpace(testo))
@@ -66,7 +66,7 @@ namespace back_end.Controllers
                 schedePaginateDto = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
-                    .Select(s => new SchedaDTO
+                    .Select(s => new GetSchedaDTO
                     {
                         IdScheda = s.IdScheda,
                         CodAlfabetico = s.CodAlfabetico,
@@ -75,7 +75,7 @@ namespace back_end.Controllers
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
                         DataScadenza = s.DataScadenza,
-                        Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                        Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
                             Descrizione = cs.Categoria.Descrizione
@@ -88,7 +88,7 @@ namespace back_end.Controllers
             {
                 //ricerca testuale a 3 livelli su titolo e descrizione, il ranking per tier richiede il calcolo in memoria, quindi materializziamo tutti i candidati (già filtrati per ente/categoria/visibilità) prima di ordinare e paginare.
                 var candidati = await query
-                    .Select(s => new SchedaDTO
+                    .Select(s => new GetSchedaDTO
                     {
                         IdScheda = s.IdScheda,
                         CodAlfabetico = s.CodAlfabetico,
@@ -97,7 +97,7 @@ namespace back_end.Controllers
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
                         DataScadenza = s.DataScadenza,
-                        Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                        Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
                             Descrizione = cs.Categoria.Descrizione
@@ -126,7 +126,7 @@ namespace back_end.Controllers
             }
             totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
 
-            var response = new PagedResponseDTO<SchedaDTO>
+            var response = new GetPagineDTO<GetSchedaDTO>
             {
                 CurrentPage = page,
                 PageSize = pageSize,
@@ -140,7 +140,7 @@ namespace back_end.Controllers
 
         // GET: api/Scheda/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<SchedaDTO>> GetScheda(int id)
+        public async Task<ActionResult<GetSchedaDTO>> GetScheda(int id)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
 
@@ -157,7 +157,7 @@ namespace back_end.Controllers
 
             var schedaDto = await query
                 .Where(s => s.IdScheda == id)
-                .Select(s => new SchedaDTO
+                .Select(s => new GetSchedaDTO
                 {
                     IdScheda = s.IdScheda,
                     CodAlfabetico = s.CodAlfabetico,
@@ -166,7 +166,9 @@ namespace back_end.Controllers
                     Descrizione = s.Descrizione,
                     IdEnte = s.IdEnte,
                     DataScadenza = s.DataScadenza,
-                    Categorie = s.CategorieSchede.Select(cs => new CategoriaSchedaInfoDTO
+                    DataCreazione = s.DataCreazione,
+                    DataUltimaModifica = s.DataUltimaModifica,
+                    Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                     {
                         IdCategoria = cs.IdCategoria,
                         Descrizione = cs.Categoria.Descrizione
@@ -185,7 +187,7 @@ namespace back_end.Controllers
         // PUT: api/Scheda/5
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSchede(int id, CreaEModificaSchedaDTO dto)
+        public async Task<IActionResult> PutSchede(int id, ModificaSchedaDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
@@ -266,7 +268,7 @@ namespace back_end.Controllers
         // POST: api/Scheda
         //[Authorize]
         [HttpPost]
-        public async Task<ActionResult<CreaEModificaSchedaDTO>> PostScheda(CreaEModificaSchedaDTO dto)
+        public async Task<ActionResult<CreaSchedaDTO>> PostScheda(CreaSchedaDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
@@ -320,7 +322,7 @@ namespace back_end.Controllers
             }
 
             // Mappiamo l'oggetto appena creato nel DTO di risposta
-            var ruoloDto = new CreaEModificaSchedaDTO
+            var ruoloDto = new CreaSchedaDTO
             {
                 CodNumerico = schede.CodNumerico,
                 CodAlfabetico = schede.CodAlfabetico,

@@ -1,6 +1,6 @@
 namespace InfoGiovani_Back.DTOs;
 
-public class CreaEModificaCategoriaDTO
+public class CreaCategoriaDTO
 {
     public int? IdParents { get; set; }
     public required string Descrizione { get; set; }

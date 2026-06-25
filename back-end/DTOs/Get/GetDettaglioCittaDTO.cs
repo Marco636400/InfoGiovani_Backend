@@ -1,6 +1,6 @@
 namespace InfoGiovani_Back.DTOs;
 
-public class CittaConGerarchiaDTO
+public class GetDettaglioCittaDTO
 {
     public int IdCitta { get; set; }
     public string? NomeCitta { get; set; }

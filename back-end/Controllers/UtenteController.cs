@@ -139,8 +139,8 @@ namespace back_end.Controllers
                 utente.Username = dto.Username;
             if (!string.IsNullOrWhiteSpace(dto.Password))
                 utente.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            if (dto.IdRuolo != utente.IdRuolo && dto.IdRuolo != 0)
-                utente.IdRuolo = dto.IdRuolo;
+            if (dto.IdRuolo.HasValue && dto.IdRuolo.Value != utente.IdRuolo && dto.IdRuolo.Value != 0)
+                utente.IdRuolo = dto.IdRuolo.Value;
             if (dto.Disabilita != utente.Disabilita)
                 utente.Disabilita = dto.Disabilita;
             utente.IdUtenteModifica = identita.IdUtente;
@@ -169,19 +169,19 @@ namespace back_end.Controllers
         //post
         [Authorize(Policy = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Utente>> PostUtente(CreazioneUtenteDTO dto)
+        public async Task<ActionResult<Utente>> PostUtente(CreaUtenteDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
-                
+
             if (string.IsNullOrWhiteSpace(dto.Username))
             {
                 return BadRequest("L'Username è obbligatorio e non può essere vuoto.");
             }
 
             // Se l'ID ruolo non è stato inviato dal frontend, blocca la creazione
-            if (!dto.IdRuolo.HasValue)
+            if (dto.IdRuolo == 0)
             {
                 return BadRequest("L'assegnazione di un ruolo è obbligatoria per creare l'utente.");
             }
@@ -195,7 +195,7 @@ namespace back_end.Controllers
                 Cognome = dto.Cognome,
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                IdRuolo = dto.IdRuolo.Value, // .Value estrae l'int effettivo inviato (es. 1 per Admin, 2, 3...)
+                IdRuolo = dto.IdRuolo,
                 IdUtenteCreazione = identita.IdUtente
             };
 

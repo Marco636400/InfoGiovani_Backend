@@ -78,7 +78,7 @@ namespace back_end.Controllers
         // PUT: api/Ruoli/5
         [Authorize(Policy = "Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRuoli(int id, CreaEModificaRuoliDTO dto)
+        public async Task<IActionResult> PutRuoli(int id, ModificaRuoliDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             var ruoli = await _context.Ruoli.FindAsync(id);
@@ -90,7 +90,8 @@ namespace back_end.Controllers
                 return BadRequest("Utente non trovato");
 
             // Aggiorna le proprietà permesse
-            ruoli.NomeRuolo = dto.NomeRuolo;
+            if (!string.IsNullOrEmpty(dto.NomeRuolo))
+                ruoli.NomeRuolo = dto.NomeRuolo;
             ruoli.CanCreateUser = dto.CanCreateUser;
             ruoli.CanCreateEntity = dto.CanCreateEntity;
             ruoli.CanViewCard = dto.CanViewCard;
@@ -123,25 +124,27 @@ namespace back_end.Controllers
         // POST: api/Ruoli
         [Authorize(Policy = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<CreaEModificaRuoliDTO>> PostRuoli(CreaEModificaRuoliDTO dto)
+        public async Task<ActionResult<CreaRuoliDTO>> PostRuoli(CreaRuoliDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
-                return BadRequest("Utente non trovato");            // Creiamo l'oggetto di database. IdRuolo e DataCreazione vengono gestiti in automatico (private set)
+                return BadRequest("Utente non trovato");
+            if (!string.IsNullOrEmpty(dto.NomeRuolo))
+                return BadRequest("Nome del ruolo necessario");
             var ruoli = new Ruoli
             {
                 NomeRuolo = dto.NomeRuolo,
                 CanCreateUser = dto.CanCreateUser,
                 CanCreateEntity = dto.CanCreateEntity,
                 CanViewCard = dto.CanViewCard,
-                IdUtenteCreazione = identita.IdUtente // Valorizzato dall'utente che invia la richiesta
+                IdUtenteCreazione = identita.IdUtente
             };
 
             _context.Ruoli.Add(ruoli);
             await _context.SaveChangesAsync();
 
             // Mappiamo l'oggetto appena creato nel DTO di risposta
-            var ruoloDto = new CreaEModificaRuoliDTO
+            var ruoloDto = new CreaRuoliDTO
             {
                 NomeRuolo = ruoli.NomeRuolo,
                 CanCreateUser = ruoli.CanCreateUser,
