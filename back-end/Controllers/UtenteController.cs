@@ -34,7 +34,7 @@ namespace back_end.Controllers
 
             var query = _context.Utenti.AsQueryable();
 
-            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+            bool puoVedereDisabilitate = identita.CanCreateUser;
 
             if (!puoVedereDisabilitate)
                 query = query.Where(s => !s.Disabilita);
@@ -174,10 +174,18 @@ namespace back_end.Controllers
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
+                
             if (string.IsNullOrWhiteSpace(dto.Username))
             {
                 return BadRequest("L'Username è obbligatorio e non può essere vuoto.");
             }
+
+            // Se l'ID ruolo non è stato inviato dal frontend, blocca la creazione
+            if (!dto.IdRuolo.HasValue)
+            {
+                return BadRequest("L'assegnazione di un ruolo è obbligatoria per creare l'utente.");
+            }
+
             if (await _context.Utenti.AnyAsync(u => u.Username == dto.Username))
                 return Conflict(new { error = "Username già in uso" });
 
@@ -187,7 +195,7 @@ namespace back_end.Controllers
                 Cognome = dto.Cognome,
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                IdRuolo = dto.IdRuolo,
+                IdRuolo = dto.IdRuolo.Value, // .Value estrae l'int effettivo inviato (es. 1 per Admin, 2, 3...)
                 IdUtenteCreazione = identita.IdUtente
             };
 
