@@ -133,7 +133,7 @@ namespace back_end.Controllers
         // PUT: api/Ente/5
         [Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEnti(int id, CreaEModificaEnteDTO dto)
+        public async Task<IActionResult> PutEnti(int id, ModificaEnteDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
@@ -144,7 +144,8 @@ namespace back_end.Controllers
                 return NotFound();
             }
 
-            enti.Nome = dto.Nome;
+            if (!string.IsNullOrEmpty(dto.Nome))
+                enti.Nome = dto.Nome;
             enti.DescrizioneEnte = dto.DescrizioneEnte;
             enti.Telefono1 = dto.Telefono1;
             enti.Telefono2 = dto.Telefono2;
@@ -181,11 +182,13 @@ namespace back_end.Controllers
         // POST: api/Ente
         [Authorize(Policy = "Entity")]
         [HttpPost]
-        public async Task<ActionResult<CreaEModificaEnteDTO>> PostEnte(CreaEModificaEnteDTO dto)
+        public async Task<ActionResult<CreaEnteDTO>> PostEnte(CreaEnteDTO dto)
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
+            if (string.IsNullOrEmpty(dto.Nome))
+                return BadRequest("Nome dell'ente necessario");
             var ente = new Ente
             {
                 Nome = dto.Nome,
@@ -205,7 +208,7 @@ namespace back_end.Controllers
             await _context.SaveChangesAsync();
 
             // Mappiamo l'oggetto appena creato nel DTO di risposta
-            var ruoloDto = new CreaEModificaEnteDTO
+            var ruoloDto = new CreaEnteDTO
             {
                 Nome = ente.Nome,
                 DescrizioneEnte = ente.DescrizioneEnte,

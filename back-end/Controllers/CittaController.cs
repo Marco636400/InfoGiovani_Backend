@@ -53,11 +53,11 @@ namespace back_end.Controllers
         }
         // GET: api/Citta/Dettaglio/5
         [HttpGet("Dettaglio/{id}")]
-        public async Task<ActionResult<CittaConGerarchiaDTO>> GetCittaConGerarchia(int id)
+        public async Task<ActionResult<GetDettaglioCittaDTO>> GetCittaConGerarchia(int id)
         {
             var risultato = await _context.Citta
                 .Where(c => c.IdCitta == id)
-                .Select(c => new CittaConGerarchiaDTO
+                .Select(c => new GetDettaglioCittaDTO
                 {
                     IdCitta = c.IdCitta,
                     NomeCitta = c.NomeCitta,

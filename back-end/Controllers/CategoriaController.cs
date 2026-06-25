@@ -120,7 +120,7 @@ public class CategoriaController : ControllerBase
 
     // PUT: api/Categoria/5    
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCategoria(int id, CreaEModificaCategoriaDTO dto)
+    public async Task<IActionResult> PutCategoria(int id, ModificaCategoriaDTO dto)
     {
         var categoria = await _context.Categorie.FindAsync(id);
         if (categoria == null)
@@ -129,7 +129,8 @@ public class CategoriaController : ControllerBase
         }
 
         categoria.IdParents = dto.IdParents;
-        categoria.Descrizione = dto.Descrizione;
+        if (!string.IsNullOrEmpty(dto.Descrizione))
+            categoria.Descrizione = dto.Descrizione;
         categoria.Disabilita = dto.Disabilita;
         categoria.IsPrivate = dto.IsPrivate;
 
@@ -157,7 +158,7 @@ public class CategoriaController : ControllerBase
     // POST: api/Categoria
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaEModificaCategoriaDTO dto)
+    public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaCategoriaDTO dto)
     {
         if (dto.Descrizione == null || dto.Descrizione.Trim() == "")
         {

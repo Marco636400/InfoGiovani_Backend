@@ -1,6 +1,6 @@
 namespace InfoGiovani_Back.DTOs
 {
-    public class PagedResponseDTO<T>
+    public class GetPagineDTO<T>
     {
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
