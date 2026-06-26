@@ -109,7 +109,7 @@ namespace back_end.Controllers
                     .Select(s => new
                     {
                         Dto = s,
-                        Punteggio = RicercaTestualeService.CalcolaPunteggio(testo, s.Titolo, s.Descrizione)
+                        Punteggio = RicercaTestualeService.CalcolaPunteggioTotale(testo, s.Titolo, s.Descrizione)
                     })
                     .Where(x => x.Punteggio.HasValue)
                     .OrderBy(x => x.Punteggio!.Value)
