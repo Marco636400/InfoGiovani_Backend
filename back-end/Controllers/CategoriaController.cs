@@ -69,7 +69,7 @@ public class CategoriaController : ControllerBase
             .Select(c => new
             {
                 Dto = c,
-                Punteggio = RicercaTestualeService.CalcolaPunteggio(ricerca, c.Descrizione)
+                Punteggio = RicercaTestualeService.CalcolaPunteggioTotale(ricerca, c.Descrizione)
             })
             .Where(x => x.Punteggio.HasValue)
             .OrderBy(x => x.Punteggio!.Value)

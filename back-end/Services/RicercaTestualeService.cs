@@ -34,7 +34,7 @@ public static class RicercaTestualeService
 
     //Tier migliore (più basso) trovato cercando la parola tra tutti i token di un campo
     //(tokenizzazione solo sugli spazi). Null se la parola non è presente nel campo.
-  
+
     public static int? TierParolaInCampo(string parola, string? campo)
     {
         if (string.IsNullOrWhiteSpace(campo))
@@ -87,4 +87,39 @@ public static class RicercaTestualeService
         }
         return somma;
     }
+    
+    //Verifica se l'intera frase di ricerca compare come sottostringa consecutiva
+    //(case/accent-insensitive, spazi multipli normalizzati a uno) in almeno uno dei campi.
+    //Priorità massima: se trovata, il record deve precedere qualsiasi corrispondenza a parole sparse.
+    public static bool TrovaFraseEsatta(string fraseRicerca, params string?[] campi)
+    {
+        var frase = NormalizzaSpazi(fraseRicerca);
+        if (string.IsNullOrWhiteSpace(frase))
+            return false;
+
+        foreach (var campo in campi)
+        {
+            if (string.IsNullOrWhiteSpace(campo))
+                continue;
+
+            var campoNormalizzato = NormalizzaSpazi(campo);
+            if (Comparer.IndexOf(campoNormalizzato, frase, Opzioni) >= 0)
+                return true;
+        }
+        return false;
+    }
+
+    //Punteggio complessivo "a due livelli":
+    //- frase esatta consecutiva trovata -> priorità massima (int.MinValue, batte qualsiasi somma di tier)
+    //- altrimenti -> punteggio a somma di tier per parola (CalcolaPunteggio), null se non tutte le parole trovano corrispondenza
+    public static int? CalcolaPunteggioTotale(string testoRicerca, params string?[] campi)
+    {
+        if (TrovaFraseEsatta(testoRicerca, campi))
+            return int.MinValue;
+
+        return CalcolaPunteggio(testoRicerca, campi);
+    }
+
+    private static string NormalizzaSpazi(string s) =>
+        string.Join(' ', s.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 }
