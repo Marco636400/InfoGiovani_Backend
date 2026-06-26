@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using InfoGiovani_Back.Models;
 using System.Security.Claims;
+using InfoGiovani_Back.DTOs;
 
 namespace InfoGiovani_Back.Controllers
 {
@@ -54,12 +55,23 @@ namespace InfoGiovani_Back.Controllers
                 Expires = DateTimeOffset.UtcNow.AddDays(int.Parse(config["Jwt:RefreshTokenExpiresDays"]!))
             });
 
-            return Ok(new { accessToken });
+            var risposta = new GetLoginDTO
+            {
+                AccessToken = accessToken,
+                IdUtente = utente.IdUtente,
+                NomeUtente = utente.NomeUtente,
+                IdRuolo = utente.IdRuolo,
+                CanCreateUser = utente.Ruolo.CanCreateUser,
+                CanCreateEntity = utente.Ruolo.CanCreateEntity,
+                CanViewCard = utente.Ruolo.CanViewCard
+            };
+
+            return Ok(risposta);
         }
+
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
-            // Legge il refresh token dal cookie HttpOnly
             var refreshToken = Request.Cookies["refreshToken"];
 
             if (string.IsNullOrEmpty(refreshToken))
@@ -81,21 +93,28 @@ namespace InfoGiovani_Back.Controllers
             );
             await db.SaveChangesAsync();
 
-            // Rispedisce il nuovo refresh token come cookie HttpOnly
             Response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true, 
+                Secure = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTimeOffset.UtcNow.AddDays(
                     int.Parse(config["Jwt:RefreshTokenExpiresDays"]!)
                 )
             });
 
-            return Ok(new
+            var risposta = new GetLoginDTO
             {
-                accessToken = newAccessToken
-            });
+                AccessToken = newAccessToken,
+                IdUtente = utente.IdUtente,
+                NomeUtente = utente.NomeUtente,
+                IdRuolo = utente.IdRuolo,
+                CanCreateUser = utente.Ruolo.CanCreateUser,
+                CanCreateEntity = utente.Ruolo.CanCreateEntity,
+                CanViewCard = utente.Ruolo.CanViewCard
+            };
+
+            return Ok(risposta);
         }
 
         [HttpPost("logout")]
