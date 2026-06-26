@@ -10,7 +10,7 @@ public class Utente
     public bool Disabilita { get; set; } = false;
     public required int IdRuolo { get; set; }
     public required int IdUtenteCreazione { get; set; }
-    public DateTime DataCreazione { get; private set; } = DateTime.Now;
+    public DateTime DataCreazione { get; set; } = DateTime.Now;
     public int? IdUtenteModifica { get; set; }
     public DateTime? DataUltimaModifica { get; set; }
     public DateTime? UltimoLogin { get; set; }

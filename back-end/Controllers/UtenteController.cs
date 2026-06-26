@@ -196,7 +196,9 @@ namespace back_end.Controllers
                 Username = dto.Username,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 IdRuolo = dto.IdRuolo,
-                IdUtenteCreazione = identita.IdUtente
+                IdUtenteCreazione = identita.IdUtente,
+                
+                DataCreazione = DateTime.Now
             };
 
             _context.Utenti.Add(utente);
@@ -204,6 +206,7 @@ namespace back_end.Controllers
 
             return CreatedAtAction("GetUtente", new { id = utente.IdUtente }, utente);
         }
+
         // DELETE: api/Utente/5
         [Authorize(Policy = "Admin")]
         [HttpDelete("{id}")]
@@ -229,6 +232,7 @@ namespace back_end.Controllers
 
             return NoContent();
         }
+
         private bool UtenteExists(int id)
         {
             return _context.Utenti.Any(e => e.IdUtente == id);
