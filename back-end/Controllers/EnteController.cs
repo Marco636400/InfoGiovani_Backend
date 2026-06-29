@@ -24,20 +24,20 @@ namespace back_end.Controllers
             _context = context;
         }
 
-        // GET: api/Ente
+        // GET: api/Ente con paginazione
         [HttpGet]
-        public async Task<ActionResult<GetPagineDTO<GetEnteDTO>>> GetEnti([FromQuery] string? ricerca = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<GetPagineDTO<GetEnteDTO>>> GetEnti([FromQuery] string? ricerca = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 0)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
-
             int totalRecords;
             List<GetEnteDTO> entiPaginateDto;
             var query = _context.Enti.AsQueryable();
 
+            if (page < 1) page = 1;
+
             if (string.IsNullOrWhiteSpace(ricerca))
             {
                 totalRecords = await query.CountAsync();
+                if (pageSize < 1) pageSize = totalRecords;
                 entiPaginateDto = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -63,6 +63,7 @@ namespace back_end.Controllers
             }
             else
             {
+                if (pageSize < 1) pageSize = 10;
                 // 1. Filtro preventivo su database per non caricare tutto in RAM
                 var queryFiltrata = query.Where(r =>
                     r.Nome.Contains(ricerca) ||
@@ -130,6 +131,98 @@ namespace back_end.Controllers
             return Ok(response);
         }
 
+        // GET: api/Ente
+        [HttpGet]
+        public async Task<ActionResult<GetPagineDTO<GetEnteDTO>>> GetEnti([FromQuery] string? ricerca = null)
+        {
+            List<GetEnteDTO> risultatiFinali;
+            var query = _context.Enti.AsQueryable();
+
+            if (string.IsNullOrWhiteSpace(ricerca))
+            {
+                // Se non c'è ricerca, recupera tutti gli enti senza limiti
+                risultatiFinali = await query
+                    .Select(r => new GetEnteDTO
+                    {
+                        IdEnte = r.IdEnte,
+                        Nome = r.Nome,
+                        DescrizioneEnte = r.DescrizioneEnte,
+                        IdCitta = r.IdCitta,
+                        Telefono1 = r.Telefono1,
+                        Telefono2 = r.Telefono2,
+                        Fax = r.Fax,
+                        Email = r.Email,
+                        Indirizzo = r.Indirizzo,
+                        Url = r.Url,
+                        Contatto = r.Contatto,
+                        IdUtenteCreazione = r.IdUtenteCreazione,
+                        DataCreazione = r.DataCreazione,
+                        IdUtenteModifica = r.IdUtenteModifica,
+                        DataUltimaModifica = r.DataUltimaModifica
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                // 1. Filtro preventivo su database
+                var queryFiltrata = query.Where(r =>
+                    r.Nome.Contains(ricerca) ||
+                    (r.DescrizioneEnte != null && r.DescrizioneEnte.Contains(ricerca)) ||
+                    (r.Citta != null && r.Citta.NomeCitta != null && r.Citta.NomeCitta.Contains(ricerca))
+                );
+
+                // 2. Proiezione leggera dei soli dati utili
+                var candidati = await queryFiltrata
+                    .Select(r => new
+                    {
+                        Dto = new GetEnteDTO
+                        {
+                            IdEnte = r.IdEnte,
+                            Nome = r.Nome,
+                            DescrizioneEnte = r.DescrizioneEnte,
+                            IdCitta = r.IdCitta,
+                            Telefono1 = r.Telefono1,
+                            Telefono2 = r.Telefono2,
+                            Fax = r.Fax,
+                            Email = r.Email,
+                            Indirizzo = r.Indirizzo,
+                            Url = r.Url,
+                            Contatto = r.Contatto,
+                            IdUtenteCreazione = r.IdUtenteCreazione,
+                            DataCreazione = r.DataCreazione,
+                            IdUtenteModifica = r.IdUtenteModifica,
+                            DataUltimaModifica = r.DataUltimaModifica
+                        },
+                        NomeCitta = r.Citta != null ? r.Citta.NomeCitta : null
+                    })
+                    .ToListAsync();
+
+                // 3. Calcolo punteggio in memoria ed ordinamento completo (senza Skip/Take)
+                risultatiFinali = candidati
+                    .Select(c => new
+                    {
+                        c.Dto,
+                        Punteggio = RicercaTestualeService.CalcolaPunteggioTotale(ricerca, c.Dto.Nome, c.Dto.DescrizioneEnte, c.NomeCitta)
+                    })
+                    .Where(x => x.Punteggio.HasValue)
+                    .OrderBy(x => x.Punteggio!.Value)
+                    .ThenBy(x => x.Dto.Nome)
+                    .Select(x => x.Dto)
+                    .ToList();
+            }
+
+            // Invia la risposta simulando una pagina unica che contiene tutti i risultati filtrati
+            var response = new GetPagineDTO<GetEnteDTO>
+            {
+                CurrentPage = 1,
+                PageSize = risultatiFinali.Count,
+                TotalRecords = risultatiFinali.Count,
+                TotalPages = 1,
+                Schede = risultatiFinali
+            };
+
+            return Ok(response);
+        }
 
         // GET: api/Ente/5
         [HttpGet("{id}")]
