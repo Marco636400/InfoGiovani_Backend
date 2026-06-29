@@ -28,16 +28,17 @@ namespace back_end.Controllers
         [HttpGet]
         public async Task<ActionResult<GetPagineDTO<GetEnteDTO>>> GetEnti([FromQuery] string? ricerca = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
 
             int totalRecords;
             List<GetEnteDTO> entiPaginateDto;
             var query = _context.Enti.AsQueryable();
 
+            if (page < 1) page = 1;
+
             if (string.IsNullOrWhiteSpace(ricerca))
             {
                 totalRecords = await query.CountAsync();
+                if (pageSize < 1) pageSize = totalRecords;
                 entiPaginateDto = await query
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -63,6 +64,7 @@ namespace back_end.Controllers
             }
             else
             {
+                if (pageSize < 1) pageSize = 10;
                 // 1. Filtro preventivo su database per non caricare tutto in RAM
                 var queryFiltrata = query.Where(r =>
                     r.Nome.Contains(ricerca) ||
