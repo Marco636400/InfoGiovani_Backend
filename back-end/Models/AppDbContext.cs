@@ -168,15 +168,7 @@ public class AppDbContext : DbContext
             e.ToTable("scheda");
             e.HasKey(s => s.IdScheda);
             e.Property(s => s.IdScheda).ValueGeneratedOnAdd();
-            e.Property(s => s.CodNumerico).HasMaxLength(50);
-            e.Property(s => s.CodAlfabetico).HasMaxLength(50);
             e.Property(s => s.Titolo).HasMaxLength(200).IsRequired();
-
-            e.Property(s => s.IsScaduto)
-            .HasComputedColumnSql(
-                "(case when [DataScadenza] IS NOT NULL AND [DataScadenza]<CONVERT([date],getdate()) then CONVERT([bit],(1)) else CONVERT([bit],(0)) end)",
-                stored: false);
-
             e.HasOne(s => s.UtenteCreazione)
             .WithMany()
             .HasForeignKey(s => s.IdUtenteCreazione)

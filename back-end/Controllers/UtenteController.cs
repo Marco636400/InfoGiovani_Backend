@@ -197,7 +197,7 @@ namespace back_end.Controllers
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 IdRuolo = dto.IdRuolo,
                 IdUtenteCreazione = identita.IdUtente,
-                
+                Disabilita = dto.Disabilita,
                 DataCreazione = DateTime.Now
             };
 
