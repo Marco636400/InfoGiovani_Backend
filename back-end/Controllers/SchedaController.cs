@@ -265,8 +265,14 @@ namespace back_end.Controllers
             return NoContent();
         }
 
+        private bool SchedaExists(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         // POST: api/Scheda
         //[Authorize]
+
         [HttpPost]
         public async Task<ActionResult<CreaSchedaDTO>> PostScheda(CreaSchedaDTO dto)
         {
@@ -342,21 +348,38 @@ namespace back_end.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteScheda(int id)
         {
+            // 1. Cerchiamo la scheda
             var scheda = await _context.Schede.FindAsync(id);
             if (scheda == null)
             {
                 return NotFound();
             }
 
-            _context.Schede.Remove(scheda);
-            await _context.SaveChangesAsync();
+            // Usiamo una transazione per essere sicuri che entrambe le eliminazioni vadano a buon fine
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            return NoContent();
-        }
+            try
+            {
+                // 2. Eliminiamo prima tutti i legami nella tabella molti-a-molti 'categorieschede'
+                var relazioni = _context.CategorieSchede.Where(cs => cs.IdScheda == id);
+                _context.CategorieSchede.RemoveRange(relazioni);
 
-        private bool SchedaExists(int id)
-        {
-            return _context.Schede.Any(e => e.IdScheda == id);
+                // 3. Ora che la scheda è "libera", possiamo eliminarla dalla tabella principale
+                _context.Schede.Remove(scheda);
+
+                // Salva tutto nel database e conferma la transazione
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                // Se qualcosa va storto, annulla le modifiche per non corrompere i dati
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Errore del database durante l'eliminazione: {ex.Message}");
+            }
         }
     }
 }
+    
