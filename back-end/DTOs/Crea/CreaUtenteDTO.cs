@@ -11,4 +11,5 @@ public class CreaUtenteDTO
 
     [Required(ErrorMessage = "Il ruolo è obbligatorio.")]
     public int IdRuolo { get; set; }
+    public bool Disabilita { get; set; } = false;
 }

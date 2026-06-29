@@ -7,13 +7,9 @@ public class Scheda
     public DateTime DataCreazione { get;private set; } = DateTime.Now;
     public int? IdUtenteModifica { get; set; }
     public DateTime? DataUltimaModifica { get; set; }
-    public string? CodNumerico { get; set; }
-    public string? CodAlfabetico { get; set; }
     public required string Titolo { get; set; }
     public string? Descrizione { get; set; }
     public int? IdEnte { get; set; }
-    public DateTime? DataScadenza { get; set; }
-    public bool IsScaduto { get; private set; }
     public bool IsPrivate { get; set; } = false;
     public bool Disabilita { get; set; } = false;
 

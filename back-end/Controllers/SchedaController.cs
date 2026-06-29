@@ -69,12 +69,9 @@ namespace back_end.Controllers
                     .Select(s => new GetSchedaDTO
                     {
                         IdScheda = s.IdScheda,
-                        CodAlfabetico = s.CodAlfabetico,
-                        CodNumerico = s.CodNumerico,
                         Titolo = s.Titolo,
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
-                        DataScadenza = s.DataScadenza,
                         Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
@@ -91,12 +88,9 @@ namespace back_end.Controllers
                     .Select(s => new GetSchedaDTO
                     {
                         IdScheda = s.IdScheda,
-                        CodAlfabetico = s.CodAlfabetico,
-                        CodNumerico = s.CodNumerico,
                         Titolo = s.Titolo,
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
-                        DataScadenza = s.DataScadenza,
                         Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
@@ -160,12 +154,9 @@ namespace back_end.Controllers
                 .Select(s => new GetSchedaDTO
                 {
                     IdScheda = s.IdScheda,
-                    CodAlfabetico = s.CodAlfabetico,
-                    CodNumerico = s.CodNumerico,
                     Titolo = s.Titolo,
                     Descrizione = s.Descrizione,
                     IdEnte = s.IdEnte,
-                    DataScadenza = s.DataScadenza,
                     DataCreazione = s.DataCreazione,
                     DataUltimaModifica = s.DataUltimaModifica,
                     Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
@@ -218,12 +209,9 @@ namespace back_end.Controllers
             }
 
             // Aggiorna le proprietà permesse
-            schede.CodNumerico = dto.CodNumerico;
-            schede.CodAlfabetico = dto.CodAlfabetico;
             schede.Titolo = dto.Titolo;
             schede.Descrizione = dto.Descrizione;
             schede.IdEnte = dto.IdEnte;
-            schede.DataScadenza = dto.DataScadenza;
             schede.IsPrivate = dto.IsPrivate;
             schede.Disabilita = dto.Disabilita;
             schede.IdUtenteModifica = identita.IdUtente;
@@ -301,13 +289,10 @@ namespace back_end.Controllers
             // Creiamo l'oggetto di database. IdScheda e DataScadenza vengono gestiti in automatico (private set)
             var schede = new Scheda
             {
-                CodNumerico = dto.CodNumerico,
-                CodAlfabetico = dto.CodAlfabetico,
                 Titolo = dto.Titolo,
                 Descrizione = dto.Descrizione,
                 IdEnte = dto.IdEnte, // Valorizzato dall'utente che invia la richiesta
                 IdUtenteCreazione = identita.IdUtente,
-                DataScadenza = dto.DataScadenza,
                 IsPrivate = dto.IsPrivate,
                 Disabilita = dto.Disabilita
             };
@@ -330,12 +315,9 @@ namespace back_end.Controllers
             // Mappiamo l'oggetto appena creato nel DTO di risposta
             var ruoloDto = new CreaSchedaDTO
             {
-                CodNumerico = schede.CodNumerico,
-                CodAlfabetico = schede.CodAlfabetico,
                 Titolo = schede.Titolo,
                 Descrizione = schede.Descrizione,
                 IdEnte = schede.IdEnte,
-                DataScadenza = schede.DataScadenza,
                 IsPrivate = schede.IsPrivate
             };
 
@@ -382,4 +364,4 @@ namespace back_end.Controllers
         }
     }
 }
-    
+
