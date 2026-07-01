@@ -72,6 +72,8 @@ namespace back_end.Controllers
                         Titolo = s.Titolo,
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
+                        Disabilita = s.Disabilita,
+                        IsPrivate = s.IsPrivate,
                         Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
@@ -91,6 +93,8 @@ namespace back_end.Controllers
                         Titolo = s.Titolo,
                         Descrizione = s.Descrizione,
                         IdEnte = s.IdEnte,
+                        Disabilita = s.Disabilita,
+                        IsPrivate = s.IsPrivate,
                         Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                         {
                             IdCategoria = cs.IdCategoria,
@@ -159,6 +163,8 @@ namespace back_end.Controllers
                     IdEnte = s.IdEnte,
                     DataCreazione = s.DataCreazione,
                     DataUltimaModifica = s.DataUltimaModifica,
+                    Disabilita = s.Disabilita,
+                    IsPrivate = s.IsPrivate,
                     Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
                     {
                         IdCategoria = cs.IdCategoria,
@@ -255,7 +261,7 @@ namespace back_end.Controllers
 
         private bool SchedaExists(int id)
         {
-            throw new NotImplementedException();
+            return _context.Schede.Any(e => e.IdScheda == id);
         }
 
         // POST: api/Scheda

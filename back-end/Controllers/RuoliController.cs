@@ -129,7 +129,7 @@ namespace back_end.Controllers
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
-            if (!string.IsNullOrEmpty(dto.NomeRuolo))
+            if (string.IsNullOrEmpty(dto.NomeRuolo))
                 return BadRequest("Nome del ruolo necessario");
             var ruoli = new Ruoli
             {

@@ -9,5 +9,7 @@ public class GetSchedaDTO
     public int? IdEnte { get; set; }
     public DateTime DataCreazione { get; set; }
     public DateTime? DataUltimaModifica { get; set; }
+    public bool Disabilita { get; set; }
+    public bool IsPrivate { get; set; }
     public ICollection<GetCategoriaSchedaDTO> Categorie { get; set; } = [];
 }

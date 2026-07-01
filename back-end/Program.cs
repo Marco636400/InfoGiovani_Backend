@@ -7,6 +7,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
+using System.IO;
+using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,20 +76,32 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("LanPolicy", policy =>
     {
-        policy
-            .WithOrigins(
-                "http://localhost:4200",
-                "https://radici.orientarti.it"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials(); //per permettere l'invio dei cookie, necessario per il refresh token
+
+        /*policy.WithOrigins(
+            "https://radici.orientarti.it"
+        )*/
+        policy.SetIsOriginAllowed(origin => true) // Permette qualsiasi origine
+      .AllowAnyMethod()
+      .AllowAnyHeader()
+      .AllowCredentials(); // Ora questo è consentito
+
     });
 });
 
 builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
+
+var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+// Insegna al server come servire i file dei font
+provider.Mappings[".ttf"] = "application/x-font-truetype";
+provider.Mappings[".woff"] = "application/font-woff";
+provider.Mappings[".woff2"] = "application/font-woff2";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
