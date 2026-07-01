@@ -162,7 +162,7 @@ public class AppDbContext : DbContext
              .HasConstraintName("FK_ruoli_utente_modifica")
              .OnDelete(DeleteBehavior.Restrict);
         });
-
+// ── SCHEDA ─────────────────────────────────────────────
         modelBuilder.Entity<Scheda>(e =>
         {
             e.ToTable("scheda");
