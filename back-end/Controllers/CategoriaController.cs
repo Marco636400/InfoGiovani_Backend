@@ -128,9 +128,22 @@ public class CategoriaController : ControllerBase
             return NotFound();
         }
 
+        // CONTROLLO DUPLICATO SOLO SE CAMBIA DESCRIZIONE
+        if (!string.IsNullOrEmpty(dto.Descrizione) &&
+            dto.Descrizione.ToLower() != categoria.Descrizione.ToLower())
+        {
+            bool nomeUsato = await _context.Categorie
+                .AnyAsync(c => c.Descrizione.ToLower() == dto.Descrizione.ToLower());
+
+            if (nomeUsato)
+                return Conflict("Esiste già una categoria con questa descrizione");
+        }
+
         categoria.IdParents = dto.IdParents;
+
         if (!string.IsNullOrEmpty(dto.Descrizione))
             categoria.Descrizione = dto.Descrizione;
+
         categoria.Disabilita = dto.Disabilita;
         categoria.IsPrivate = dto.IsPrivate;
 
@@ -155,6 +168,7 @@ public class CategoriaController : ControllerBase
         return NoContent();
     }
 
+
     // POST: api/Categoria
     [Authorize]
     [HttpPost]
@@ -164,6 +178,13 @@ public class CategoriaController : ControllerBase
         {
             return BadRequest("La descrizione è obbligatoria");
         }
+
+        // CONTROLLO DUPLICATO
+        bool categoriaEsiste = await _context.Categorie
+            .AnyAsync(c => c.Descrizione.ToLower() == dto.Descrizione.ToLower());
+
+        if (categoriaEsiste)
+            return Conflict("Esiste già una categoria con questa descrizione");
 
         var categoria = new Categoria
         {
@@ -187,6 +208,7 @@ public class CategoriaController : ControllerBase
 
         return CreatedAtAction(nameof(GetCategoria), new { id = categoria.IdCategoria }, risultato);
     }
+
 
     // DELETE: api/Categoria/5 — logica esistente invariata
     [Authorize]

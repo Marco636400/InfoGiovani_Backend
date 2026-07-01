@@ -82,21 +82,32 @@ namespace back_end.Controllers
         {
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             var ruoli = await _context.Ruoli.FindAsync(id);
+
             if (ruoli == null)
-            {
                 return NotFound();
-            }
+
             if (identita == null)
                 return BadRequest("Utente non trovato");
 
-            // Aggiorna le proprietà permesse
+            // 🔥 CONTROLLO DUPLICATO SOLO SE CAMBIA NOME
+            if (!string.IsNullOrEmpty(dto.NomeRuolo) &&
+                dto.NomeRuolo.ToLower() != ruoli.NomeRuolo.ToLower())
+            {
+                bool nomeUsato = await _context.Ruoli
+                    .AnyAsync(r => r.NomeRuolo.ToLower() == dto.NomeRuolo.ToLower());
+
+                if (nomeUsato)
+                    return Conflict("Esiste già un ruolo con questo nome");
+            }
+
+            // Aggiorna le proprietà
             if (!string.IsNullOrEmpty(dto.NomeRuolo))
                 ruoli.NomeRuolo = dto.NomeRuolo;
+
             ruoli.CanCreateUser = dto.CanCreateUser;
             ruoli.CanCreateEntity = dto.CanCreateEntity;
             ruoli.CanViewCard = dto.CanViewCard;
 
-            // Campi di tracciamento per la modifica
             ruoli.IdUtenteModifica = identita.IdUtente;
             ruoli.DataUltimaModifica = DateTime.Now;
 
@@ -109,17 +120,14 @@ namespace back_end.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!RuoliExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
         }
+
 
         // POST: api/Ruoli
         [Authorize(Policy = "Admin")]
@@ -129,8 +137,17 @@ namespace back_end.Controllers
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
             if (identita == null)
                 return BadRequest("Utente non trovato");
+
             if (string.IsNullOrEmpty(dto.NomeRuolo))
                 return BadRequest("Nome del ruolo necessario");
+
+            // CONTROLLO DUPLICATO
+            bool ruoloEsiste = await _context.Ruoli
+                .AnyAsync(r => r.NomeRuolo.ToLower() == dto.NomeRuolo.ToLower());
+
+            if (ruoloEsiste)
+                return Conflict("Esiste già un ruolo con questo nome");
+
             var ruoli = new Ruoli
             {
                 NomeRuolo = dto.NomeRuolo,
@@ -143,7 +160,6 @@ namespace back_end.Controllers
             _context.Ruoli.Add(ruoli);
             await _context.SaveChangesAsync();
 
-            // Mappiamo l'oggetto appena creato nel DTO di risposta
             var ruoloDto = new CreaRuoliDTO
             {
                 NomeRuolo = ruoli.NomeRuolo,
