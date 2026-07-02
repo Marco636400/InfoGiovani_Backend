@@ -28,82 +28,94 @@ namespace back_end.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GetSchedaDTO>>> GetSchede([FromQuery] int? idCategoria = null, [FromQuery] List<int>? idEnti = null, [FromQuery] string? testo = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            //controllo per valori < 0 
+            // Controllo per valori < 0 
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            //verifica dll'identità di chi chiama e controllo dei ruoli
+            // Verifica dell'identità di chi chiama e controllo dei ruoli
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
-            bool puoVederePrivate = identita?.CanViewCard ?? false;
-            bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+            bool puoVederePrivate = identita != null;
+            bool puoVedereDisabilitate = identita?.CanCreateEntity ?? false;
 
+            // Precarichiamo tutte le categorie (essenziale sia per l'ereditarietà dello stato che per i filtri in cascata)
+            var tutteLeCategorie = await _context.Categorie.ToListAsync();
+
+            // Query di base senza filtri di stato
             var query = _context.Schede.AsQueryable();
 
-            if (!puoVederePrivate)
-                query = query.Where(s => !s.IsPrivate);
-
-            if (!puoVedereDisabilitate)
-                query = query.Where(s => !s.Disabilita);
-
+            // --- MODIFICA FILTRO CATEGORIA IN CASCATA ---
             if (idCategoria.HasValue)
-                query = query.Where(s => s.CategorieSchede.Any(cs => cs.IdCategoria == idCategoria.Value));
+            {
+                var listaIdCategorieValide = new List<int>();
 
-            //la scheda deve appartenere ad almeno uno degli enti selezionati 
+                // Raccogliamo ricorsivamente l'ID cercato e tutti i discendenti
+                RaccogliIdCategorieFiglieRicorsivo(idCategoria.Value, tutteLeCategorie, listaIdCategorieValide);
+
+                // Ora la scheda viene inclusa se è collegata a una QUALSIASI delle categorie della lista calcolata
+                query = query.Where(s => s.CategorieSchede.Any(cs => listaIdCategorieValide.Contains(cs.IdCategoria)));
+            }
+            // --------------------------------------------
+
+            // La scheda deve appartenere ad almeno uno degli enti selezionati 
             if (idEnti != null && idEnti.Count > 0)
                 query = query.Where(s => s.IdEnte.HasValue && idEnti.Contains(s.IdEnte.Value));
 
+            // Estraiamo i record candidati per elaborarli in memoria
+            var candidatiDb = await query
+                .Select(s => new
+                {
+                    Scheda = s,
+                    IdCategorieCollegate = s.CategorieSchede.Select(cs => cs.IdCategoria).ToList(),
+                    CategorieDto = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
+                    {
+                        IdCategoria = cs.IdCategoria,
+                        Descrizione = cs.Categoria.Descrizione
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            var schedeProcessate = new List<GetSchedaDTO>();
+
+            foreach (var candidato in candidatiDb)
+            {
+                bool schedaIsDisabilitata = candidato.Scheda.Disabilita ||
+                    candidato.IdCategorieCollegate.Any(idCat => CalcolaDisabilitazioneCategoriaRicorsiva(idCat, tutteLeCategorie));
+
+                bool schedaIsPrivata = candidato.Scheda.IsPrivate ||
+                    candidato.IdCategorieCollegate.Any(idCat => CalcolaPrivacyCategoriaRicorsiva(idCat, tutteLeCategorie));
+
+                // CONTROLLI DI SICUREZZA API
+                if (schedaIsDisabilitata && !puoVedereDisabilitate) continue;
+                if (schedaIsPrivata && !puoVederePrivate) continue;
+
+                schedeProcessate.Add(new GetSchedaDTO
+                {
+                    IdScheda = candidato.Scheda.IdScheda,
+                    Titolo = candidato.Scheda.Titolo,
+                    Descrizione = candidato.Scheda.Descrizione,
+                    IdEnte = candidato.Scheda.IdEnte,
+                    DataCreazione = candidato.Scheda.DataCreazione,
+                    Disabilita = schedaIsDisabilitata,
+                    IsPrivate = !schedaIsDisabilitata && schedaIsPrivata,
+                    Categorie = candidato.CategorieDto
+                });
+            }
+
             int totalRecords;
-            int totalPages;
             List<GetSchedaDTO> schedePaginateDto;
 
-            //se non c'è testo della barra di ricerca fa ordinamento e paginazione in SQL
             if (string.IsNullOrWhiteSpace(testo))
             {
-                totalRecords = await query.CountAsync();
+                var risultatiOrdinati = schedeProcessate
+                    .OrderByDescending(s => s.DataCreazione)
+                    .ToList();
 
-                query = query.OrderByDescending(s => s.DataCreazione);
-
-                schedePaginateDto = await query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .Select(s => new GetSchedaDTO
-                    {
-                        IdScheda = s.IdScheda,
-                        Titolo = s.Titolo,
-                        Descrizione = s.Descrizione,
-                        IdEnte = s.IdEnte,
-                        Disabilita = s.Disabilita,
-                        IsPrivate = s.IsPrivate,
-                        Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
-                        {
-                            IdCategoria = cs.IdCategoria,
-                            Descrizione = cs.Categoria.Descrizione
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
+                totalRecords = risultatiOrdinati.Count;
+                schedePaginateDto = risultatiOrdinati.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             }
             else
             {
-                //ricerca testuale a 3 livelli su titolo e descrizione, il ranking per tier richiede il calcolo in memoria, quindi materializziamo tutti i candidati (già filtrati per ente/categoria/visibilità) prima di ordinare e paginare.
-                var candidati = await query
-                    .Select(s => new GetSchedaDTO
-                    {
-                        IdScheda = s.IdScheda,
-                        Titolo = s.Titolo,
-                        Descrizione = s.Descrizione,
-                        IdEnte = s.IdEnte,
-                        Disabilita = s.Disabilita,
-                        IsPrivate = s.IsPrivate,
-                        Categorie = s.CategorieSchede.Select(cs => new GetCategoriaSchedaDTO
-                        {
-                            IdCategoria = cs.IdCategoria,
-                            Descrizione = cs.Categoria.Descrizione
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
-                var risultatiOrdinati = candidati
+                var risultatiOrdinati = schedeProcessate
                     .Select(s => new
                     {
                         Dto = s,
@@ -111,18 +123,15 @@ namespace back_end.Controllers
                     })
                     .Where(x => x.Punteggio.HasValue)
                     .OrderBy(x => x.Punteggio!.Value)
-                    .ThenByDescending(x => x.Dto.IdScheda) // ASSUNZIONE: tie-break non specificato, vedi nota
+                    .ThenByDescending(x => x.Dto.IdScheda)
                     .Select(x => x.Dto)
                     .ToList();
 
                 totalRecords = risultatiOrdinati.Count;
-
-                schedePaginateDto = risultatiOrdinati
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
+                schedePaginateDto = risultatiOrdinati.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             }
-            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
 
             var response = new GetPagineDTO<GetSchedaDTO>
             {
@@ -365,6 +374,46 @@ namespace back_end.Controllers
                 // Se qualcosa va storto, annulla le modifiche per non corrompere i dati
                 await transaction.RollbackAsync();
                 return StatusCode(500, $"Errore del database durante l'eliminazione: {ex.Message}");
+            }
+        }
+        [NonAction]
+        private bool CalcolaDisabilitazioneCategoriaRicorsiva(int? idCategoriaCorrente, List<Categoria> tutteLeCategorie)
+        {
+            if (!idCategoriaCorrente.HasValue) return false;
+
+            var corrente = tutteLeCategorie.FirstOrDefault(c => c.IdCategoria == idCategoriaCorrente.Value);
+            if (corrente == null) return false;
+            if (corrente.Disabilita) return true;
+
+            // Chiamata ricorsiva usando la tua proprietà IdParents
+            return CalcolaDisabilitazioneCategoriaRicorsiva(corrente.IdParents, tutteLeCategorie);
+        }
+
+        [NonAction]
+        private bool CalcolaPrivacyCategoriaRicorsiva(int? idCategoriaCorrente, List<Categoria> tutteLeCategorie)
+        {
+            if (!idCategoriaCorrente.HasValue) return false;
+
+            var corrente = tutteLeCategorie.FirstOrDefault(c => c.IdCategoria == idCategoriaCorrente.Value);
+            if (corrente == null) return false;
+            if (corrente.IsPrivate) return true;
+
+            // Chiamata ricorsiva usando la tua proprietà IdParents
+            return CalcolaPrivacyCategoriaRicorsiva(corrente.IdParents, tutteLeCategorie);
+        }
+        [NonAction]
+        private void RaccogliIdCategorieFiglieRicorsivo(int idCategoriaPadre, List<Categoria> tutteLeCategorie, List<int> risultato)
+        {
+            if (!risultato.Contains(idCategoriaPadre))
+            {
+                risultato.Add(idCategoriaPadre);
+            }
+
+            var figlie = tutteLeCategorie.Where(c => c.IdParents == idCategoriaPadre).ToList();
+
+            foreach (var figlia in figlie)
+            {
+                RaccogliIdCategorieFiglieRicorsivo(figlia.IdCategoria, tutteLeCategorie, risultato);
             }
         }
     }
