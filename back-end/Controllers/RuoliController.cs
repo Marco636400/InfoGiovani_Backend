@@ -35,7 +35,6 @@ namespace back_end.Controllers
                     NomeRuolo = r.NomeRuolo,
                     CanCreateUser = r.CanCreateUser,
                     CanCreateEntity = r.CanCreateEntity,
-                    CanViewCard = r.CanViewCard,
                     IdUtenteCreazione = r.IdUtenteCreazione,
                     DataCreazione = r.DataCreazione,
                     IdUtenteModifica = r.IdUtenteModifica,
@@ -59,7 +58,6 @@ namespace back_end.Controllers
                 NomeRuolo = r.NomeRuolo,
                 CanCreateUser = r.CanCreateUser,
                 CanCreateEntity = r.CanCreateEntity,
-                CanViewCard = r.CanViewCard,
                 IdUtenteCreazione = r.IdUtenteCreazione,
                 DataCreazione = r.DataCreazione,
                 IdUtenteModifica = r.IdUtenteModifica,
@@ -89,7 +87,6 @@ namespace back_end.Controllers
             if (identita == null)
                 return BadRequest("Utente non trovato");
 
-            // 🔥 CONTROLLO DUPLICATO SOLO SE CAMBIA NOME
             if (!string.IsNullOrEmpty(dto.NomeRuolo) &&
                 dto.NomeRuolo.ToLower() != ruoli.NomeRuolo.ToLower())
             {
@@ -106,7 +103,6 @@ namespace back_end.Controllers
 
             ruoli.CanCreateUser = dto.CanCreateUser;
             ruoli.CanCreateEntity = dto.CanCreateEntity;
-            ruoli.CanViewCard = dto.CanViewCard;
 
             ruoli.IdUtenteModifica = identita.IdUtente;
             ruoli.DataUltimaModifica = DateTime.Now;
@@ -153,7 +149,6 @@ namespace back_end.Controllers
                 NomeRuolo = dto.NomeRuolo,
                 CanCreateUser = dto.CanCreateUser,
                 CanCreateEntity = dto.CanCreateEntity,
-                CanViewCard = dto.CanViewCard,
                 IdUtenteCreazione = identita.IdUtente
             };
 
@@ -165,7 +160,6 @@ namespace back_end.Controllers
                 NomeRuolo = ruoli.NomeRuolo,
                 CanCreateUser = ruoli.CanCreateUser,
                 CanCreateEntity = ruoli.CanCreateEntity,
-                CanViewCard = ruoli.CanViewCard,
             };
 
             return CreatedAtAction(nameof(GetRuoli), new { id = ruoli.IdRuolo }, ruoloDto);

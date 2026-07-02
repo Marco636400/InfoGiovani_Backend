@@ -25,47 +25,47 @@ public class CategoriaController : ControllerBase
     public async Task<ActionResult<IEnumerable<GetCategoriaDTO>>> GetCategorie([FromQuery] string? ricerca = null)
     {
         var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
+        bool puoVederePrivate = identita != null;
+        bool puoVedereDisabilitate = identita?.CanCreateEntity ?? false;
 
-        var query = _context.Categorie.AsQueryable();
+        // 1. Carichiamo TUTTE le categorie pure dal DB per poter calcolare la gerarchia
+        var tutteLeCategorie = await _context.Categorie.ToListAsync();
 
-        bool puoVederePrivate = identita?.CanViewCard ?? false;
-        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+        var categorieProcessate = new List<GetCategoriaDTO>();
 
-        if (!puoVederePrivate)
-            query = query.Where(s => !s.IsPrivate);
-
-        if (!puoVedereDisabilitate)
-            query = query.Where(s => !s.Disabilita);
-
-        if (string.IsNullOrWhiteSpace(ricerca))
+        // 2. Calcolo dinamico dello stato ereditato in memoria
+        foreach (var cat in tutteLeCategorie)
         {
-            var risultato = await query
-                .Select(c => new GetCategoriaDTO
-                {
-                    IdCategoria = c.IdCategoria,
-                    IdParents = c.IdParents,
-                    Descrizione = c.Descrizione,
-                    Disabilita = c.Disabilita,
-                    IsPrivate = c.IsPrivate
-                })
-                .ToListAsync();
+            // Una categoria è ereditariamente disabilitata se lo è lei stessa o un suo antenato
+            bool catIsDisabilitata = cat.Disabilita || CalcolaDisabilitazioneCategoriaRicorsiva(cat.IdParents, tutteLeCategorie);
 
-            return Ok(risultato);
+            // Una categoria è ereditariamente privata se lo è lei stessa o un suo antenato
+            bool catIsPrivata = cat.IsPrivate || CalcolaPrivacyCategoriaRicorsiva(cat.IdParents, tutteLeCategorie);
+
+            // CONTROLLI DI SICUREZZA API (Filtro definitivo)
+            if (catIsDisabilitata && !puoVedereDisabilitate) continue;
+            if (catIsPrivata && !puoVederePrivate) continue;
+
+            // Se supera i controlli, mappiamo il DTO alterando i flag solo visivamente
+            categorieProcessate.Add(new GetCategoriaDTO
+            {
+                IdCategoria = cat.IdCategoria,
+                IdParents = cat.IdParents,
+                Descrizione = cat.Descrizione,
+                Disabilita = catIsDisabilitata,
+                // La disabilitazione ha la priorità: se è disabilitata vince sulla privacy nel JSON
+                IsPrivate = !catIsDisabilitata && catIsPrivata
+            });
         }
 
-        // Ricerca a 3 livelli sulla Descrizione (unico campo testuale disponibile per Categoria)
-        var candidati = await query
-            .Select(c => new GetCategoriaDTO
-            {
-                IdCategoria = c.IdCategoria,
-                IdParents = c.IdParents,
-                Descrizione = c.Descrizione,
-                Disabilita = c.Disabilita,
-                IsPrivate = c.IsPrivate
-            })
-            .ToListAsync();
+        // 3. Gestione della ricerca testuale sui dati validati e filtrati
+        if (string.IsNullOrWhiteSpace(ricerca))
+        {
+            return Ok(categorieProcessate);
+        }
 
-        var risultatiOrdinati = candidati
+        // Ricerca a 3 livelli sulla Descrizione (eseguita in memoria sull'albero già filtrato)
+        var risultatiOrdinati = categorieProcessate
             .Select(c => new
             {
                 Dto = c,
@@ -88,8 +88,8 @@ public class CategoriaController : ControllerBase
 
         var query = _context.Categorie.AsQueryable();
 
-        bool puoVederePrivate = identita?.CanViewCard ?? false;
-        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+        bool puoVederePrivate = identita != null;
+        bool puoVedereDisabilitate = identita?.CanCreateEntity ?? false;
 
         if (!puoVederePrivate)
             query = query.Where(s => !s.IsPrivate);
@@ -211,7 +211,7 @@ public class CategoriaController : ControllerBase
     }
 
 
-    // DELETE: api/Categoria/5 — logica esistente invariata
+    //DELETE: api/Categoria/5
     [Authorize(Policy = "Entity")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategoria(int id)
@@ -245,5 +245,32 @@ public class CategoriaController : ControllerBase
     private bool CategoriaExists(int id)
     {
         return _context.Categorie.Any(e => e.IdCategoria == id);
+    }
+
+
+    [NonAction]
+    private bool CalcolaDisabilitazioneCategoriaRicorsiva(int? idCategoriaCorrente, List<Categoria> tutteLeCategorie)
+    {
+        if (!idCategoriaCorrente.HasValue) return false;
+
+        var corrente = tutteLeCategorie.FirstOrDefault(c => c.IdCategoria == idCategoriaCorrente.Value);
+        if (corrente == null) return false;
+        if (corrente.Disabilita) return true;
+
+        // Chiamata ricorsiva usando la tua proprietà IdParents
+        return CalcolaDisabilitazioneCategoriaRicorsiva(corrente.IdParents, tutteLeCategorie);
+    }
+
+    [NonAction]
+    private bool CalcolaPrivacyCategoriaRicorsiva(int? idCategoriaCorrente, List<Categoria> tutteLeCategorie)
+    {
+        if (!idCategoriaCorrente.HasValue) return false;
+
+        var corrente = tutteLeCategorie.FirstOrDefault(c => c.IdCategoria == idCategoriaCorrente.Value);
+        if (corrente == null) return false;
+        if (corrente.IsPrivate) return true;
+
+        // Chiamata ricorsiva usando la tua proprietà IdParents
+        return CalcolaPrivacyCategoriaRicorsiva(corrente.IdParents, tutteLeCategorie);
     }
 }
