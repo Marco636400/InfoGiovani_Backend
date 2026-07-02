@@ -14,24 +14,19 @@ public class TokenService
     public string GenerateAccessToken(Utente utente)
     {
         var jwtConfig = this.config.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(
-            Convert.FromBase64String(jwtConfig["Key"]!)
-        );
+        var key = new SymmetricSecurityKey(Convert.FromBase64String(jwtConfig["Key"]!));
         var credenziali = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+        // Inseriamo solo le informazioni di identità. I permessi li gestisce il Middleware dal DB.
         var claims = new[]
         {
-            new Claim("IdUtente", utente.IdUtente.ToString()),
-            new Claim(JwtRegisteredClaimNames.Iat,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
-                ClaimValueTypes.Integer64),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim("token_type", "access"),
-        };
+        new Claim("IdUtente", utente.IdUtente.ToString()),
+        new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim("token_type", "access"),
+    };
 
-        var expires = DateTime.UtcNow.AddMinutes(
-            int.Parse(jwtConfig["AccessTokenExpiresMinutes"]!)
-        );
+        var expires = DateTime.UtcNow.AddMinutes(int.Parse(jwtConfig["AccessTokenExpiresMinutes"]!));
 
         var token = new JwtSecurityToken(
             issuer: jwtConfig["Issuer"],
