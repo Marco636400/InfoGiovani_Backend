@@ -36,7 +36,6 @@ namespace InfoGiovani_Back.Middleware
             {
                 nameof(IdentitaUtente.CanCreateUser) => identita.CanCreateUser,
                 nameof(IdentitaUtente.CanCreateEntity) => identita.CanCreateEntity,
-                nameof(IdentitaUtente.CanViewCard) => identita.CanViewCard,
                 _ => false
             };
 
