@@ -34,7 +34,7 @@ namespace back_end.Controllers
 
             //verifica dll'identità di chi chiama e controllo dei ruoli
             var identita = HttpContext.Items[IdentitaUtente.HttpContextKey] as IdentitaUtente;
-            bool puoVederePrivate = identita?.CanViewCard ?? false;
+            bool puoVederePrivate = identita != null;
             bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
 
             var query = _context.Schede.AsQueryable();
@@ -144,7 +144,7 @@ namespace back_end.Controllers
 
             var query = _context.Schede.AsQueryable();
 
-            bool puoVederePrivate = identita?.CanViewCard ?? false;
+            bool puoVederePrivate = identita != null;
             bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
 
             if (!puoVederePrivate)

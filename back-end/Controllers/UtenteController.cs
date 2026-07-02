@@ -111,7 +111,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Utente/5
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUtente(int id, ModificaUtenteDTO dto)
         {

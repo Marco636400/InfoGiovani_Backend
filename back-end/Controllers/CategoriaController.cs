@@ -28,8 +28,8 @@ public class CategoriaController : ControllerBase
 
         var query = _context.Categorie.AsQueryable();
 
-        bool puoVederePrivate = identita?.CanViewCard ?? false;
-        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+        bool puoVederePrivate = identita != null;
+        bool puoVedereDisabilitate = identita?.CanCreateEntity ?? false;
 
         if (!puoVederePrivate)
             query = query.Where(s => !s.IsPrivate);
@@ -88,8 +88,8 @@ public class CategoriaController : ControllerBase
 
         var query = _context.Categorie.AsQueryable();
 
-        bool puoVederePrivate = identita?.CanViewCard ?? false;
-        bool puoVedereDisabilitate = identita?.CanCreateUser ?? false;
+        bool puoVederePrivate = identita != null;
+        bool puoVedereDisabilitate = identita?.CanCreateEntity ?? false;
 
         if (!puoVederePrivate)
             query = query.Where(s => !s.IsPrivate);
@@ -211,7 +211,7 @@ public class CategoriaController : ControllerBase
     }
 
 
-    // DELETE: api/Categoria/5 — logica esistente invariata
+    //DELETE: api/Categoria/5
     [Authorize(Policy = "Entity")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategoria(int id)

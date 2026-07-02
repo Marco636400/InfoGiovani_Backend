@@ -87,7 +87,6 @@ namespace back_end.Controllers
             if (identita == null)
                 return BadRequest("Utente non trovato");
 
-            // 🔥 CONTROLLO DUPLICATO SOLO SE CAMBIA NOME
             if (!string.IsNullOrEmpty(dto.NomeRuolo) &&
                 dto.NomeRuolo.ToLower() != ruoli.NomeRuolo.ToLower())
             {

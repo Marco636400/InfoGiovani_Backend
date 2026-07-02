@@ -62,8 +62,7 @@ namespace InfoGiovani_Back.Controllers
                 NomeUtente = utente.NomeUtente,
                 IdRuolo = utente.IdRuolo,
                 CanCreateUser = utente.Ruolo.CanCreateUser,
-                CanCreateEntity = utente.Ruolo.CanCreateEntity,
-                CanViewCard = utente.Ruolo.CanViewCard
+                CanCreateEntity = utente.Ruolo.CanCreateEntity
             };
 
             return Ok(risposta);
@@ -110,8 +109,7 @@ namespace InfoGiovani_Back.Controllers
                 NomeUtente = utente.NomeUtente,
                 IdRuolo = utente.IdRuolo,
                 CanCreateUser = utente.Ruolo.CanCreateUser,
-                CanCreateEntity = utente.Ruolo.CanCreateEntity,
-                CanViewCard = utente.Ruolo.CanViewCard
+                CanCreateEntity = utente.Ruolo.CanCreateEntity
             };
 
             return Ok(risposta);
