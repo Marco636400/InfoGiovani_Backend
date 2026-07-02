@@ -59,9 +59,6 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("Entity", policy =>
         policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanCreateEntity))));
-
-    options.AddPolicy("Private", policy =>
-        policy.Requirements.Add(new PermessoRequirement(nameof(IdentitaUtente.CanViewCard))));
 });
 
 

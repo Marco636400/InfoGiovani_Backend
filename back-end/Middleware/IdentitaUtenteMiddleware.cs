@@ -50,8 +50,7 @@ namespace InfoGiovani_Back.Middleware
                     u.Disabilita,
                     u.IdRuolo,
                     CanCreateUser = u.Ruolo.CanCreateUser,
-                    CanCreateEntity = u.Ruolo.CanCreateEntity,
-                    CanViewCard = u.Ruolo.CanViewCard
+                    CanCreateEntity = u.Ruolo.CanCreateEntity
                 })
                 .FirstOrDefaultAsync();
 
@@ -74,8 +73,7 @@ namespace InfoGiovani_Back.Middleware
                 IdUtente = datiUtente.IdUtente,
                 IdRuolo = datiUtente.IdRuolo,
                 CanCreateUser = datiUtente.CanCreateUser,
-                CanCreateEntity = datiUtente.CanCreateEntity,
-                CanViewCard = datiUtente.CanViewCard
+                CanCreateEntity = datiUtente.CanCreateEntity
             };
 
             await _next(context);
