@@ -182,7 +182,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Scheda/5
-        [Authorize]
+        [Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSchede(int id, ModificaSchedaDTO dto)
         {
@@ -265,8 +265,7 @@ namespace back_end.Controllers
         }
 
         // POST: api/Scheda
-        //[Authorize]
-
+        [Authorize(Policy = "Entity")]
         [HttpPost]
         public async Task<ActionResult<CreaSchedaDTO>> PostScheda(CreaSchedaDTO dto)
         {
@@ -332,7 +331,7 @@ namespace back_end.Controllers
 
 
         // DELETE: api/Scheda/5
-        [Authorize]
+        [Authorize(Policy = "Entity")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteScheda(int id)
         {

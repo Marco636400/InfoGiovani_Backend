@@ -68,8 +68,7 @@ namespace back_end.Controllers
         }
 
         // PUT: api/Allegato/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize]
+        [Authorize(Policy = "Entity")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAllegato(int id, ModificaAllegatoDTO dto)
         {
@@ -106,8 +105,7 @@ namespace back_end.Controllers
             return NoContent();
         }
         // POST: api/Allegato
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize]
+        [Authorize(Policy = "Entity")]
         [HttpPost]
         public async Task<ActionResult<CreaAllegatoDTO>> PostAllegato(CreaAllegatoDTO dto)
         {
@@ -132,7 +130,7 @@ namespace back_end.Controllers
             return CreatedAtAction("GetAllegato", new { id = allegato.IdAllegato, idScheda = allegato.IdScheda }, allegato);
         }
         // DELETE: api/Allegato/5
-        [Authorize]
+        [Authorize(Policy = "Entity")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAllegato(int id)
         {

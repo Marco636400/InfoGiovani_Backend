@@ -119,6 +119,7 @@ public class CategoriaController : ControllerBase
     }
 
     // PUT: api/Categoria/5    
+    [Authorize(Policy = "Entity")]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCategoria(int id, ModificaCategoriaDTO dto)
     {
@@ -170,7 +171,7 @@ public class CategoriaController : ControllerBase
 
 
     // POST: api/Categoria
-    [Authorize]
+    [Authorize(Policy = "Entity")]
     [HttpPost]
     public async Task<ActionResult<GetCategoriaDTO>> PostCategoria(CreaCategoriaDTO dto)
     {
@@ -211,7 +212,7 @@ public class CategoriaController : ControllerBase
 
 
     // DELETE: api/Categoria/5 — logica esistente invariata
-    [Authorize]
+    [Authorize(Policy = "Entity")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategoria(int id)
     {
